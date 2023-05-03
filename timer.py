@@ -12,3 +12,11 @@ class Timer:
             return True
         else: return False
 
+
+class Counter:
+    def __init__(self):
+        self.old_time = time.time()
+    
+    def stop(self):
+        return time.time() - self.old_time
+

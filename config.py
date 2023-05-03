@@ -40,5 +40,5 @@ tc = 0.02                                       #s
 fc = 1/tc                                       #hz
 
 #   ODE solver frequency
-td = 0.001                                      #s
+td = 0.01                                      #s
 fd = 1/td                                       #hz

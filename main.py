@@ -1,9 +1,8 @@
 import config
 import argparse
 import numpy as np
-from timer import Timer
- 
-
+from timer import Timer, Counter
+from visualizer import Viz
 
 
 
@@ -23,10 +22,21 @@ def Run(q0, qh, th, zt, td, tc):
     #   TODO: should the update rate of contoller and the ode be different? 
     controller_timer = Timer(tc)
     ode_timer = Timer(td)
+    #   end to end timer Tt
+    e2e_timer = Counter()
+
+    #   run the visualizer
+    __viz = Viz()
     while True: 
         #   Run this loop every td time for the ode solver
         if ode_timer.is_fire():
+            #   TODO: write the dynamics
+            #   TODO: write the trajectory generator
             pass
+    
+
+    print('Time elapsed : {0:.2f} ms'.format(e2e_timer.stop() * 1000))
+            
 
 
 
