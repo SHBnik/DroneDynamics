@@ -1,12 +1,12 @@
 import numpy as np
-from scipy.integrate import ode, odeint
+from scipy.integrate import ode
 from timer import Timer
 import threading
 
 
 
 class Drone:
-    def __init__(self, mass, I, length, kf, km, g, initial_pose):
+    def __init__(self, mass, I, length, kf, km, g, initial_pose, to):
         self.mass = mass 
         self.Ib = I
         self.invIb = np.linalg.inv(I)
@@ -23,11 +23,18 @@ class Drone:
         #     [0,               self.length,    0,              -self.length],    #   MomentX
         #     [-self.length,    0,              self.length,    0],               #   MomentY
         #     [self.gamma,      -self.gamma,    self.gamma,     -self.gamma]])    #   MomentZ
+
+        
+        self.u1 = 0 
+        self.u2 = np.array([0, 0, 0])
         
         self.state = np.zeros(12)
         self.state[0:3] = initial_pose[0:3]
         self.state[6:9] = initial_pose[3:6]
         self.ode =  ode(self.state_dot).set_integrator('vode', nsteps=500,method='bdf')
+        
+        self.to = to
+        self.ode_timer = Timer(to)
 
 
 
@@ -73,9 +80,9 @@ class Drone:
     def wrap_angle(self,angels):
         return( (( angels + np.pi) % (2 * np.pi )) - np.pi )
 
-    def update_dynamics(self, dt, u1=0, u2=np.array([0, 0, 0])):
+    def update_dynamics(self, u1=0, u2=np.array([0, 0, 0])):
             self.ode.set_initial_value(self.state ,0).set_f_params(u1, u2)
-            temp_state = self.ode.integrate(self.ode.t + dt)
+            temp_state = self.ode.integrate(self.ode.t + self.to)
             #   To keep the angels in [-pi, pi] range
             temp_state[6:9] = self.wrap_angle(temp_state[6:9])
             #   To prevent the drone fall into the ground
@@ -85,23 +92,28 @@ class Drone:
             self.state = temp_state
 
 
-    def get_pose(self):
+    def set_u1(self, u1):
+        self.u1 = u1
+        
+    def set_u2(self, u2):
+        self.u2 = u2
+
+    def get_pose_time(self):
         pose = np.zeros(6)
         pose[0:3] = self.state[0:3]
         pose[3:6] = self.state[6:9]
-        return pose
+        return pose, self.ode_timer.current_time()
 
 
-    def ode_loop(self,to):
-        ode_timer = Timer(to)
+    def ode_loop(self):
         while True:
-            if ode_timer.is_fire():
-                self.update_dynamics(to)
+            if self.ode_timer.is_fire():
+                self.update_dynamics(u1 = self.u1, u2 = self.u2)
 
-            ode_timer.small_delay()
+            self.ode_timer.small_delay()
 
-    def start_ode(self,to):
-        self.ode_thread = threading.Thread(target=self.ode_loop,args=(to,))
+    def start_ode(self):
+        self.ode_thread = threading.Thread(target=self.ode_loop)
         self.ode_thread.daemon = True
         self.ode_thread.start()
 

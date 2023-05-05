@@ -4,6 +4,7 @@ import numpy as np
 from timer import Timer, Counter
 from visualizer import Viz
 from dynamics import Drone
+from controller import DroneController
 import time 
 
 
@@ -25,9 +26,15 @@ def Run(q0, qh, th, zt, to, tc):
     #   end to end timer Tt
     e2e_timer = Counter()
 
+    #   Start the ODE solver aka simulation
     drone = Drone(config.drone_mass, config.I, config.drone_length, 
-                  config.kf, config.km, config.g, config.q0)
-    #   run the visualizer
+                  config.kf, config.km, config.g, q0)
+
+    #   Start the drone controller
+    controller = DroneController(drone.get_pose_time, 
+                                 [drone.set_u1, drone.set_u2], tc)
+    
+    #   Run the visualizer
     __viz = Viz()
 
 
@@ -38,11 +45,6 @@ def Run(q0, qh, th, zt, to, tc):
         if pose[2] == 0:
             break
         time.sleep(0.001)
-        #   Run this loop every td time for the ode solver
-        # if ode_timer.is_fire():
-            
-        #     #   TODO: write the trajectory generator
-        #     pass
     
 
     print('Time elapsed : {0:.2f} ms'.format(e2e_timer.stop() * 1000))
