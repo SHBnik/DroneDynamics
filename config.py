@@ -24,8 +24,8 @@ g = 9.8
 
 #   Initial pose
 #              x, y, z
-q0 = np.array([1, -1, 4,    #Position                #m  
-               0.15, 0.1, 0.2])   #Orientation             #rad
+q0 = np.array([0, 0, 0,    #Position                #m  
+               0, 0, 0])   #Orientation             #rad
 
 #   Hovering pose
 #              x, y, z
@@ -46,3 +46,6 @@ fc = 1/tc                                           #hz
 #   ODE solver frequency
 to = 0.001                                          #s
 fo = 1/to                                           #hz
+
+#   Simulation time ratio (if = 1 simulation time = real time, lowwer simiulation is slower)
+ode_scalar = 0.1

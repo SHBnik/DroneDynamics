@@ -6,6 +6,7 @@ from visualizer import Viz
 from dynamics import Drone
 from controller import DroneController
 import time 
+import matplotlib.pyplot as plt
 
 
 
@@ -28,24 +29,49 @@ def Run(q0, qh, th, zt, to, tc):
 
     #   Start the ODE solver aka simulation
     drone = Drone(config.drone_mass, config.I, config.drone_length, 
-                  config.kf, config.km, config.g, q0)
+                  config.kf, config.km, config.g, q0, to, config.ode_scalar)
 
     #   Start the drone controller
-    controller = DroneController(drone.get_pose_time, 
-                                 [drone.set_u1, drone.set_u2], tc)
+    controller = DroneController(drone.get_state_time, 
+                                 [drone.set_u1, drone.set_u2], config.drone_mass, 
+                                 config.g, config.I, tc)
     
     #   Run the visualizer
     __viz = Viz()
 
 
-    drone.start_ode(to)
+    drone.start_ode()
+    controller.start_controller()
+    max = 0 
+    min = 10 
+    # time.sleep(10)
     while True:
-        pose = drone.get_pose() 
-        print(pose)
-        if pose[2] == 0:
-            break
-        time.sleep(0.001)
+        pose, t = drone.get_pose_time()
+        t *= config.ode_scalar
+        data = pose[5]
+        if (data > max):
+            max  = data
+            # t1 = t
+
+        if (data < min):
+            min = data
+            # print(t-t1)
+
+
+        print('data : {0:1.3f} min : {1:1.3f} max : {2:1.3f} time: {3:2.2f}'.format(data, min, max, t))
+        # print('data : {0:1.3f} min : {1:1.3f} max : {2:1.3f}'.format(data, min, max))
+        # if pose[2] == 0:
+        #     break
+        time.sleep(0.01)
     
+
+
+
+
+
+
+
+
 
     print('Time elapsed : {0:.2f} ms'.format(e2e_timer.stop() * 1000))
             

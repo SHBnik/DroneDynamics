@@ -6,7 +6,7 @@ import threading
 
 
 class Drone:
-    def __init__(self, mass, I, length, kf, km, g, initial_pose, to):
+    def __init__(self, mass, I, length, kf, km, g, initial_pose, to, ode_scalar):
         self.mass = mass 
         self.Ib = I
         self.invIb = np.linalg.inv(I)
@@ -34,7 +34,7 @@ class Drone:
         self.ode =  ode(self.state_dot).set_integrator('vode', nsteps=500,method='bdf')
         
         self.to = to
-        self.ode_timer = Timer(to)
+        self.ode_timer = Timer(to/ode_scalar)
 
 
 
@@ -77,14 +77,11 @@ class Drone:
         
         return _state_dot
         
-    def wrap_angle(self,angels):
-        return( (( angels + np.pi) % (2 * np.pi )) - np.pi )
 
     def update_dynamics(self, u1=0, u2=np.array([0, 0, 0])):
             self.ode.set_initial_value(self.state ,0).set_f_params(u1, u2)
             temp_state = self.ode.integrate(self.ode.t + self.to)
-            #   To keep the angels in [-pi, pi] range
-            temp_state[6:9] = self.wrap_angle(temp_state[6:9])
+
             #   To prevent the drone fall into the ground
             temp_state[2] = max(0 ,temp_state[2])
             if temp_state[2] == 0:
@@ -103,6 +100,9 @@ class Drone:
         pose[0:3] = self.state[0:3]
         pose[3:6] = self.state[6:9]
         return pose, self.ode_timer.current_time()
+    
+    def get_state_time(self):
+        return self.state, self.ode_timer.current_time()
 
 
     def ode_loop(self):

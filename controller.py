@@ -13,7 +13,7 @@ class PDPosition:
         des = [d d-dot d-ddot] 
         '''
         signal[2] = 0
-        return np.dot(des - signal, self.k)
+        return np.sum(np.dot(des - signal, self.k))
 
 class PDVelocity:
     def __init__(self,kp,kd):
@@ -23,15 +23,33 @@ class PDVelocity:
         signal = [s s-dot s-ddot]
         des = [d d-dot d-ddot] 
         '''
-        return np.dot(des - signal, self.k)
+        return np.sum(np.dot(des - signal, self.k))
+
+
+
+class Trajectroy:
+    def __init__(self) -> None:
+        pass
+
 
 
 
 class DroneController:
-    def __init__(self, drone_pose_time_func, drone_u_func, tc):
-        self.sensor_feedback = drone_pose_time_func
+    def __init__(self, drone_state_time_func, drone_u_func, mass, g, I, tc):
+        self.sensor_feedback = drone_state_time_func
         self.u1, self.u2 = drone_u_func
 
+        self.mass = mass
+        self.g = g
+        self.I = I
+
+
+        self.xPD        = PDPosition(993.8, 189.377)
+        self.yPD        = PDPosition(993.8, 189.377)
+        self.zPD        = PDPosition(300,   35.43)
+        self.phiPD      = PDPosition(10000, 185)
+        self.thetaPD    = PDPosition(10000, 185)
+        self.psiPD      = PDPosition(452,   42)
 
 
         self.tc = tc
@@ -39,32 +57,65 @@ class DroneController:
         #   Inner loop should be 10x faster than outter loop
         self.controller_inner_timer = Timer(tc / 10)
 
-    def atitude_controller(self):
-        pass
+    def atitude_controller(self, feedback, des):
+        '''
+        des = [phi theta psi psi-dot]
+        feedback = [x y z x-dot y-dot z-dot phi theta psi phi-dot theta-dot psi-dot]
+        '''
+        u2 = np.zeros(3)
+        w_dot = np.array([self.phiPD.update(feedback[[6, 9, 6]], np.array([des[0], 0, 0])), 
+                          self.thetaPD.update(feedback[[7, 10, 7]], np.array([des[1], 0, 0])), 
+                          self.psiPD.update(feedback[[8, 11, 8]], np.array([des[2], des[3], 0]))])
+        w = feedback[9:12]
+        u2 = np.dot(self.I, w_dot) + np.cross(w, np.dot(self.I, w))
+        return u2
 
-    def postition_controller(self):
-        pass
+
+    def postition_controller(self, feedback, des):
+        '''
+        des = [x y z x-dot y-dot z-dot x-ddot y-ddot z-ddot]
+        feedback = [x y z x-dot y-dot z-dot phi theta psi phi-dot theta-dot psi-dot]
+        '''
+        u1 = self.mass * (self.g + self.zPD.update(feedback[[2, 5, 2]], des[[2, 5, 8]]))
+        phi = - (self.mass / u1) * self.yPD.update(feedback[[1, 4, 1]], des[[1, 4, 7]])
+        theta = feedback[8] * phi - (self.mass / u1) * self.xPD.update(feedback[[0, 3, 0]], des[[0, 3, 6]])
+        orientation = np.array([phi, theta, 0, 0])
+        
+        return u1, orientation
 
 
 
 
-
-    def controller_loop(self,to):
+    def controller_loop(self):
         #   Initial pose and time
-        pose, time = self.sensor_feedback()
+        state, time = self.sensor_feedback()
         while True:
             #   Outter loop to controll the position
             if self.controller_outter_timer.is_fire():
-                u1, orientation = self.postition_controller()
+
+                #   TODO: make the trajectory here
+                des_pose = np.array([0, 0, 0, #q 
+                                     0, 0, 0, #q-dot
+                                     0, 0, 0, #q-ddot
+                                     0, 0])   #psi psi-dot
+                
+                u1, orientation_des = self.postition_controller(state, des_pose[0:9])
+                orientation_des[2:4] = des_pose[9:11]
+                #   Limmit the roll and pitch to [-80 80]
+                orientation_des[0:2] = np.clip(orientation_des[0:2], -1.395, 1.395)
                 #   Apply the thrust
                 self.u1(u1)
                 #   Inner loop to controll the atitude
                 if self.controller_inner_timer.is_fire():
                     #   Get position, orientation and time as the feedback from ODE
-                    pose, time = self.sensor_feedback()
-                    self.u2(self.atitude_controller())
+                    state, time = self.sensor_feedback()
+                    self.u2(self.atitude_controller(state, orientation_des))
 
             self.controller_outter_timer.small_delay()
+
+
+
+
 
     def start_controller(self):
         self.controller_thread = threading.Thread(target=self.controller_loop)
