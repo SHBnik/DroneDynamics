@@ -22,8 +22,6 @@ import matplotlib.pyplot as plt
 
 
 def Run(q0, qh, th, zt, to, tc):
-    #   TODO: should the update rate of contoller and the ode be different? 
-    controller_timer = Timer(tc)
     #   end to end timer Tt
     e2e_timer = Counter()
 
@@ -34,7 +32,7 @@ def Run(q0, qh, th, zt, to, tc):
     #   Start the drone controller
     controller = DroneController(drone.get_state_time, 
                                  [drone.set_u1, drone.set_u2], config.drone_mass, 
-                                 config.g, config.I, tc)
+                                 config.g, config.I, tc, q0, qh, th, zt)
     
     #   Run the visualizer
     __viz = Viz()
@@ -48,17 +46,18 @@ def Run(q0, qh, th, zt, to, tc):
     while True:
         pose, t = drone.get_pose_time()
         t *= config.ode_scalar
-        data = pose[5]
-        if (data > max):
-            max  = data
-            # t1 = t
+        # data = pose[5]
+        # if (data > max):
+        #     max  = data
+        #     # t1 = t
 
-        if (data < min):
-            min = data
-            # print(t-t1)
+        # if (data < min):
+        #     min = data
+        #     # print(t-t1)
 
+        print('x : {0:1.3f} y : {1:1.3f} z : {2:1.3f} phi : {3:1.3f} theta : {4:1.3f} psi : {5:1.3f} time: {6:2.2f}'.format(pose[0], pose[1], pose[2], pose[3], pose[4], pose[5], t))
 
-        print('data : {0:1.3f} min : {1:1.3f} max : {2:1.3f} time: {3:2.2f}'.format(data, min, max, t))
+        # print('data : {0:1.3f} min : {1:1.3f} max : {2:1.3f} time: {3:2.2f}'.format(data, min, max, t))
         # print('data : {0:1.3f} min : {1:1.3f} max : {2:1.3f}'.format(data, min, max))
         # if pose[2] == 0:
         #     break
@@ -73,7 +72,7 @@ def Run(q0, qh, th, zt, to, tc):
 
 
 
-    print('Time elapsed : {0:.2f} ms'.format(e2e_timer.stop() * 1000))
+    
             
 
 

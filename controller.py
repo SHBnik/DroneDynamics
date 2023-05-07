@@ -1,8 +1,9 @@
 import numpy as np
 import threading
-from timer import Timer
+from timer import Timer, Counter
 
-#   TODO: write the trajectory generator
+#   TODO: fine tune PID
+#   TODO: fix landing (after landing robot shouldnt move)
 
 class PDPosition:
     def __init__(self,kp,kd):
@@ -27,15 +28,102 @@ class PDVelocity:
 
 
 
-class Trajectroy:
-    def __init__(self) -> None:
-        pass
+class TrajectoryGenerator:
+    def __init__(self, q0, qh, zt, T, dx = 1):
+        self.q0 = q0
+        self.qh = qh
+        self.zt = zt
+        self.T = T
+        self.dx = dx
+        self.e2e_timer = Counter()
 
+        self.stage = 0
+        self.func = [self.__take_off, self.__coast, 
+                     self.__hover, self.__land, self.__print_time]
+        
+        self.hover_timer = None
+        self.hover_flag = True
+
+        self.is_mission_done = False
+
+
+
+
+    def __take_off(self, cur_pose):
+        new_goal_pose = np.copy(self.q0) 
+        new_goal_pose[2] = self.zt
+        
+        if np.abs(cur_pose[2] - self.zt) < 1e-3:
+            self.stage += 1
+
+        return new_goal_pose
+
+    
+    def __set_hover_timer(self):
+        self.hover_timer = Timer(self.T)
+
+    def __hover(self, cur_pose):
+        if self.hover_flag:
+            self.__set_hover_timer()
+            self.hover_flag = False
+        
+        if self.hover_timer.is_fire():
+            self.hover_flag = True
+            self.stage += 1
+
+        return self.qh
+
+    def __coast(self, cur_pose):
+        
+        new_goal_pose = np.copy(self.qh)
+        new_goal_pose[0:3] = cur_pose[0:3] + self.dx
+        new_goal_pose[0:3] = np.minimum(new_goal_pose[0:3], self.qh[0:3])
+
+        #   Cheat
+        cur_pose[3:5] = 0
+        cur_pose[2] = self.qh[2]
+
+        if np.all(np.abs(cur_pose - self.qh) < 5e-3):
+            self.stage += 1
+
+        return new_goal_pose
+    
+    def __land(self, cur_pose):
+        new_goal_pose = np.copy(self.qh) 
+        new_goal_pose[2] = 0
+        
+        if np.abs(cur_pose[2] - 0) < 1e-3:
+            self.stage += 1
+
+        return new_goal_pose
+
+    def __print_time(self, cur_pose):
+        if not self.is_mission_done:
+            self.is_mission_done = True
+            print('Time elapsed : {0:.2f} ms'.format(self.e2e_timer.stop() * 1000))
+
+        new_goal_pose = np.copy(self.qh) 
+        new_goal_pose[2] = 0
+        return new_goal_pose
+
+    def next_point(self, cur_state):
+        des_state = np.zeros(11)
+        cur_pose = np.zeros(6)
+
+        cur_pose = cur_state[[0, 1, 2,
+                              6, 7, 8]]
+        new_goal_pose = self.func[self.stage](cur_pose)
+
+        #   x y z
+        des_state[0:3] = new_goal_pose[0:3]
+        #   psi
+        des_state[9] =  new_goal_pose[5] 
+        return des_state
 
 
 
 class DroneController:
-    def __init__(self, drone_state_time_func, drone_u_func, mass, g, I, tc):
+    def __init__(self, drone_state_time_func, drone_u_func, mass, g, I, tc, q0, qh, th, zt):
         self.sensor_feedback = drone_state_time_func
         self.u1, self.u2 = drone_u_func
 
@@ -56,6 +144,10 @@ class DroneController:
         self.controller_outter_timer = Timer(tc)
         #   Inner loop should be 10x faster than outter loop
         self.controller_inner_timer = Timer(tc / 10)
+
+        self.trajectory = TrajectoryGenerator(q0, qh, zt, th)
+        
+
 
     def atitude_controller(self, feedback, des):
         '''
@@ -92,12 +184,8 @@ class DroneController:
         while True:
             #   Outter loop to controll the position
             if self.controller_outter_timer.is_fire():
-
-                #   TODO: make the trajectory here
-                des_pose = np.array([0, 0, 0, #q 
-                                     0, 0, 0, #q-dot
-                                     0, 0, 0, #q-ddot
-                                     0, 0])   #psi psi-dot
+                
+                des_pose = self.trajectory.next_point(state)
                 
                 u1, orientation_des = self.postition_controller(state, des_pose[0:9])
                 orientation_des[2:4] = des_pose[9:11]
@@ -105,6 +193,7 @@ class DroneController:
                 orientation_des[0:2] = np.clip(orientation_des[0:2], -1.395, 1.395)
                 #   Apply the thrust
                 self.u1(u1)
+
                 #   Inner loop to controll the atitude
                 if self.controller_inner_timer.is_fire():
                     #   Get position, orientation and time as the feedback from ODE
