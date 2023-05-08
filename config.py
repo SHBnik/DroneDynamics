@@ -41,7 +41,7 @@ ode_scalar = 1
 
 
 #   Hovering time
-th = 5 / ode_scalar                                 #s
+th = 0 / ode_scalar                                 #s
 
 
 #   Controller frequency

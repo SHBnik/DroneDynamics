@@ -154,6 +154,7 @@ class DroneController:
         self.controller_inner_timer = Timer(tc / 10)
 
         self.trajectory = TrajectoryGenerator(q0, qh, zt, th)
+        self.mission_ended = False
         
 
 
@@ -189,6 +190,7 @@ class DroneController:
     def controller_loop(self):
         #   Initial pose and time
         state, time = self.sensor_feedback()
+        terminator = 1
         while True:
             #   Outter loop to controll the position
             if self.controller_outter_timer.is_fire():
@@ -200,20 +202,19 @@ class DroneController:
                 #   Limmit the roll and pitch to [-80 80]
                 orientation_des[0:2] = np.clip(orientation_des[0:2], -0.872, 0.872)
                 #   Apply the thrust
-                if not self.trajectory.is_mission_done:
-                    self.u1(u1)
-                else:
-                    self.u1(0)
+                if self.trajectory.is_mission_done:
+                    terminator = 0
+                    self.mission_ended = True
+
+
+                self.u1(u1 * terminator)
 
                 #   Inner loop to controll the atitude
                 if self.controller_inner_timer.is_fire():
                     #   Get position, orientation and time as the feedback from ODE
                     state, time = self.sensor_feedback()
+                    self.u2(self.atitude_controller(state, orientation_des) * terminator)
                     
-                    if not self.trajectory.is_mission_done:
-                        self.u2(self.atitude_controller(state, orientation_des))
-                    else:
-                        self.u2(np.array([0, 0, 0]))
 
             self.controller_outter_timer.small_delay()
 

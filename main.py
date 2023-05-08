@@ -32,6 +32,9 @@ def Run(q0, qh, th, zt, to, tc):
         state_dot, t = drone.get_state_dot_time()
         __viz.draw_quadri(pose, state_dot, t)
 
+        if controller.mission_ended:
+            break
+
 
 def arg_to_np(arg):
     return np.array(arg)
