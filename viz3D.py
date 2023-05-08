@@ -34,13 +34,15 @@ from numpy import pi, cos, sin, \
 from matplotlib.pyplot import *
 from scipy.linalg import expm
 from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.gridspec as gridspec
 import threading
 
 
 SIMU_UPDATE_FRQ = 1000
 BODY_SCALER = 4
-WORLD_SCALER = 2
+WORLD_SCALER = 5
 TRAJECTORY_MARKER_SIZE=0.03
+UNIT_SCALER=10
 
 class Viz:
     def __init__(self, l=0.046) :
@@ -48,21 +50,42 @@ class Viz:
         self.t = 0
         self.l = l
         self.pose_history=np.array([[0,0,0,0,0,0]])  
-        self.state_dot_window = 30
+        self.state_dot_window = 20
         self.state_dot_update_frq = SIMU_UPDATE_FRQ
-
+        self.gs = gridspec.GridSpec(nrows=4, ncols=2)
         self.fig = plt.figure()
-        self.ax3D = self.fig.add_subplot(1, 2, 1,projection="3d")
-        self.ax2D = [self.fig.add_subplot(2, 2, 2), self.fig.add_subplot(2, 2, 4)] 
+
+        # self.ax3D = self.fig.add_subplot(1, 2, 1,projection="3d")
+        # self.ax2D = [self.fig.add_subplot(2, 2, 2), self.fig.add_subplot(2, 2, 4)]
+
+        self.ax3D = self.fig.add_subplot(self.gs[:, 0],projection="3d")
+        self.ax2D = [self.fig.add_subplot(self.gs[0:, 1]),
+                     self.fig.add_subplot(self.gs[1:, 1]),
+                     self.fig.add_subplot(self.gs[2:, 1]),
+                     self.fig.add_subplot(self.gs[3:, 1])]
+
 
         # set axis limits and labels
-        for ax in self.ax2D:
-            ax.set_xlim(0, self.state_dot_window)
-            ax.set_ylim(-60, 70)
-            ax.set_title("Plot of Position")
-            plt.style.use('seaborn-white')
+        # for ax in self.ax2D:
+        #     ax.legend(loc='upper right')
+        #     ax.set_xlim(0, self.state_dot_window)
+        #     ax.set_ylim(-60, 60)
+        #     ax.set_title("Plot of Position")
+        #     plt.style.use('seaborn-white')
             # ax.xlabel("Time")
             # ax.ylabel("Position")
+
+        self.ax2D[0].set_xlim(0, self.state_dot_window)
+        self.ax2D[0].set_ylim(-60/UNIT_SCALER, 60/UNIT_SCALER)
+        self.ax2D[1].set_xlim(0, self.state_dot_window)
+        self.ax2D[1].set_ylim(-60/UNIT_SCALER, 60/UNIT_SCALER)
+        self.ax2D[2].set_xlim(0, self.state_dot_window)
+        self.ax2D[2].set_ylim(-60/UNIT_SCALER, 60/UNIT_SCALER)
+        self.ax2D[3].set_xlim(0, self.state_dot_window)
+        self.ax2D[3].set_ylim(-60/UNIT_SCALER, 60/UNIT_SCALER)
+
+        # ax.set_title("Plot of Position")
+        plt.style.use('seaborn-white')
 
         self.time_buffer = []
         self.v_buffer = [[],[],[]]
@@ -70,24 +93,62 @@ class Viz:
         self.w_buffer = [[],[],[]]
         self.w_dot_buffer = [[],[],[]] 
         
-        self.v_lines = [self.ax2D[0].plot([], [], label='Red Line', color='red')[0],
-                            self.ax2D[0].plot([], [], label='Green Line', color='green')[0],
-                            self.ax2D[0].plot([], [], label='Blue Line', color='blue')[0],]
+        self.v_lines = [self.ax2D[0].plot([], [], label='Xv', color='red')[0],
+                            self.ax2D[0].plot([], [], label='Yv', color='green')[0],
+                            self.ax2D[0].plot([], [], label='Zv', color='blue')[0],]
+        self.v_dot_lines = [self.ax2D[1].plot([], [], label='Xa', color='red',linestyle='dashed')[0],
+                                self.ax2D[1].plot([], [], label='Ya', color='green',linestyle='dashed')[0],
+                                self.ax2D[1].plot([], [], label='Za', color='blue',linestyle='dashed')[0]]
+        self.w_lines = [self.ax2D[2].plot([], [], label='Φ_dot', color='red')[0],
+                        self.ax2D[2].plot([], [], label='θ_dot', color='green')[0],
+                        self.ax2D[2].plot([], [], label='ψ_dot', color='blue')[0], ]
+        self.w_dot_lines = [self.ax2D[3].plot([], [], label='Φ_ddot', color='red',linestyle='dashed')[0],
+                            self.ax2D[3].plot([], [], label='θ_ddot', color='green',linestyle='dashed')[0],
+                            self.ax2D[3].plot([], [], label='ψ_ddot', color='blue',linestyle='dashed')[0]]
 
-        self.v_dot_lines = [self.ax2D[1].plot([], [], label='Red Line', color='red')[0],
-                                self.ax2D[1].plot([], [], label='Green Line', color='green')[0],
-                                self.ax2D[1].plot([], [], label='Blue Line', color='blue')[0]]
+    def drone_state_plot(self, state_dot, t):
+        temp_v = state_dot[0:3]/UNIT_SCALER
+        temp_v_dot = state_dot[3:6]/UNIT_SCALER
+        temp_w = state_dot[6:9]/UNIT_SCALER
+        temp_w_dot = state_dot[9:12]/UNIT_SCALER
 
+        self.time_buffer.append(t)
+        for i in range(3):
+            self.v_buffer[i].append(temp_v[i])
+            self.v_dot_buffer[i].append(temp_v_dot[i])
+            self.w_buffer[i].append(temp_w[i])
+            self.w_dot_buffer[i].append(temp_w_dot[i])
+
+        if len(self.time_buffer) > self.state_dot_window:
+            self.time_buffer.pop(0)
+            for i in range(3):
+                self.v_buffer[i].pop(0)
+                self.v_dot_buffer[i].pop(0)
+                self.w_buffer[i].pop(0)
+                self.w_dot_buffer[i].pop(0)
+
+            #   For number of 2D plots
+            for i in range(4):
+                self.ax2D[i].set_xlim(self.time_buffer[0], self.time_buffer[-1])
+
+        # set legend
+        for i in range(4):
+            self.ax2D[i].legend(loc='upper right')
+
+        # update the data for each line
+        for i in range(3):
+            self.v_lines[i].set_data(self.time_buffer, self.v_buffer[i])
+            self.v_dot_lines[i].set_data(self.time_buffer, self.v_dot_buffer[i])
+            self.w_lines[i].set_data(self.time_buffer, self.v_buffer[i])
+            self.w_dot_lines[i].set_data(self.time_buffer, self.v_dot_buffer[i])
 
     def add1(self, M):
         return vstack((M, ones(M.shape[1])))
-
 
     def ToH(self, R):  # transformation matrix to homogenous
         H = hstack((R, array([[0], [0], [0]])))
         V = vstack((H, array([0, 0, 0, 1])))
         return V
-
 
     def tran3H(self, x, y, z):
         return array([[1, 0, 0, x], [0, 1, 0, y], [0, 0, 1, z], [0, 0, 0, 1]])
@@ -99,11 +160,9 @@ class Viz:
         M = expm(angles[2] * Ad_k) @ expm(angles[1] * Ad_j) @ expm(angles[0] * Ad_i)
         return self.ToH(M)
     
-
     def adjoint(self, w):
         w = w.flatten()
         return array([[0, -w[2], w[1]], [w[2], 0, -w[0]], [-w[1], w[0], 0]])
-
 
     def draw3H(self, M, col, shadow=False, mirror=1):  # mirror=-1 in case z in directed downward
         self.ax3D.plot(mirror * M[0], M[1], mirror * M[2], color=col)
@@ -140,8 +199,6 @@ class Viz:
         self.draw3H( C3, 'blue', shadow=True)
         self.draw_trajectory(x)
 
-
-
     def draw_quadri(self, X, state_dot, t):
         self.ax3D.clear()
         ech = 1 * WORLD_SCALER
@@ -150,42 +207,6 @@ class Viz:
         self.ax3D.set_zlim3d(0, ech)
         self.draw_quadrotor3D(X, BODY_SCALER * self.l)
         self.drone_state_plot(state_dot, t)
+        # make the left 3D panel larger
+        # plt.tight_layout()
         plt.pause(1/SIMU_UPDATE_FRQ)
-
-
-
-
-
-
-    def drone_state_plot(self, state_dot, t):
-        temp_v = state_dot[0:3]
-        temp_v_dot = state_dot[3:6]
-        temp_w = state_dot[6:9]
-        temp_w_dot = state_dot[9:12]
-
-        self.time_buffer.append(t)
-        for i in range(3):
-            self.v_buffer[i].append(temp_v[i])
-            self.v_dot_buffer[i].append(temp_v_dot[i])
-
-        if len(self.time_buffer) > self.state_dot_window:
-            self.time_buffer.pop(0)
-            for i in range(3):
-                self.v_buffer[i].pop(0)
-                self.v_dot_buffer[i].pop(0)
-            #   For number of 2D plots
-            for i in range(2):
-                self.ax2D[i].set_xlim(self.time_buffer[0], self.time_buffer[-1])
-        
-
-        # update the data for each line
-        for i in range(3):
-                self.v_lines[i].set_data(self.time_buffer, self.v_buffer[i])
-                self.v_dot_lines[i].set_data(self.time_buffer, self.v_dot_buffer[i])
-
-
-
-
-
-
-
