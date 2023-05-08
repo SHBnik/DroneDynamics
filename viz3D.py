@@ -39,12 +39,14 @@ from mpl_toolkits.mplot3d import Axes3D
 SIMU_UPDATE_FRQ = 1000
 BODY_SCALER = 4
 WORLD_SCALER = 2
+TRAJECTORY_MARKER_SIZE=0.03
 
 class Viz:
     def __init__(self, l=0.046) :
         self.fig = plt.figure()
         self.ax = Axes3D(self.fig)
         self.l = l
+        self.pose_history=np.array([[0,0,0,0,0,0]])  
 
     def add1(self, M):
         return vstack((M, ones(M.shape[1])))
@@ -84,6 +86,14 @@ class Viz:
         z = zeros(n)
         return self.add1(array([x, y, z]))
 
+    def draw_trajectory(self, pose):
+        self.pose_history= np.vstack((self.pose_history,np.array(pose)))
+        x=self.pose_history[:,0]
+        y=self.pose_history[:,1]
+        z=self.pose_history[:,2]
+        dx=dy=dz=np.ones(1)*TRAJECTORY_MARKER_SIZE
+        self.ax.bar3d(x, y, z, dx, dy, dz, color="C1")
+
     def draw_quadrotor3D(self, x, l):
         Ca = hstack((self.circle3H(0.3 * l), [[0.3 * l, -0.3 * l], [0, 0], [0, 0], [1, 1]]))  # the disc + the blades
         T = self.tran3H(*x[0:3]) @ self.eulerH(-x[3:6])
@@ -97,6 +107,7 @@ class Viz:
         self.draw3H( C1, 'black', shadow=True)
         self.draw3H( C2, 'red', shadow=True)
         self.draw3H( C3, 'blue', shadow=True)
+        self.draw_trajectory(x)
 
 
 
