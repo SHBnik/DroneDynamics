@@ -87,6 +87,10 @@ class Drone:
             temp_state[2] = max(0 ,temp_state[2])
             if temp_state[2] == 0:
                 temp_state[5] = max(0 ,temp_state[5])
+                temp_state[6] = 0
+                temp_state[7] = 0
+                temp_state[9] = 0
+                temp_state[10] = 0
             self.state = temp_state
 
 
@@ -104,6 +108,9 @@ class Drone:
     
     def get_state_time(self):
         return self.state, self.ode_timer.current_time() * self.ode_scalar
+    
+    def get_state_dot_time(self):
+        return self.state_dot(0, self.state, self.u1, self.u2), self.ode_timer.current_time() * self.ode_scalar
 
 
     def ode_loop(self):

@@ -1,39 +1,14 @@
 import config
 import argparse
 import numpy as np
-from timer import Timer, Counter
-from visualizer import Viz
+from timer import Counter
 from dynamics import Drone
 from controller import DroneController
-import time 
-import matplotlib.pyplot as plt
-import viz3D
-from mpl_toolkits.mplot3d import Axes3D
-
-
-SIMU_UPDATE_FRQ=1000
-
-
-
-
-
-
-def draw_quadri(ax, X):
-    ax.clear()
-    ech = 2
-    ax.set_xlim3d(-ech, ech)
-    ax.set_ylim3d(-ech, ech)
-    ax.set_zlim3d(0, 1*ech)
-    arm=0.046
-    viz3D.draw_quadrotor3D(ax, X, np.array([[0,0,0,0]]).T, 5 * arm)
-
-
+from viz3D import Viz
 
 
 
 def Run(q0, qh, th, zt, to, tc):
-    #   end to end timer Tt
-    e2e_timer = Counter()
 
     #   Start the ODE solver aka simulation
     drone = Drone(config.drone_mass, config.I, config.drone_length, 
@@ -51,16 +26,12 @@ def Run(q0, qh, th, zt, to, tc):
     drone.start_ode()
     controller.start_controller()
 
-    fig = plt.figure()
-    ax = Axes3D(fig)
-   
+
     while True:
         pose, t = drone.get_pose_time()
-        pose[2] = -pose[2]
-        draw_quadri(ax, pose)
-        plt.pause(1/SIMU_UPDATE_FRQ)
-        # __viz.plot(pose, t)
-        # time.sleep(0.01)
+        state_dot, t = drone.get_state_dot_time()
+        __viz.draw_quadri(pose, state_dot, t)
+
 
     
 

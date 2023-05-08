@@ -192,13 +192,20 @@ class DroneController:
                 #   Limmit the roll and pitch to [-80 80]
                 orientation_des[0:2] = np.clip(orientation_des[0:2], -1.395, 1.395)
                 #   Apply the thrust
-                self.u1(u1)
+                if not self.trajectory.is_mission_done:
+                    self.u1(u1)
+                else:
+                    self.u1(0)
 
                 #   Inner loop to controll the atitude
                 if self.controller_inner_timer.is_fire():
                     #   Get position, orientation and time as the feedback from ODE
                     state, time = self.sensor_feedback()
-                    self.u2(self.atitude_controller(state, orientation_des))
+                    
+                    if not self.trajectory.is_mission_done:
+                        self.u2(self.atitude_controller(state, orientation_des))
+                    else:
+                        self.u2(np.array([0, 0, 0]))
 
             self.controller_outter_timer.small_delay()
 

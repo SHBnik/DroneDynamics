@@ -24,13 +24,13 @@ g = 9.8
 
 #   Initial pose
 #              x, y, z
-q0 = np.array([0, 0, 0,    #Position                #m  
-               0, 0, 0])   #Orientation             #rad
+q0 = np.array([0.0, 0.0, 0.0,    #Position                #m  
+               0.0, 0.0, 0.0])   #Orientation             #rad
 
 #   Hovering pose
 #              x, y, z
-qh = np.array([1, 0, 1,    #Position                #m  
-               0, 0, 1])   #Orientation             #rad
+qh = np.array([1.5, 0.0, 1.0,    #Position                #m  
+               0.0, 0.0, 0.0])   #Orientation             #rad
 
 #   Take-off altitude
 zt = 1                                              #m
