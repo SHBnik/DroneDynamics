@@ -26,6 +26,7 @@ def Run(q0, qh, th, zt, to, tc):
     drone.start_ode()
     controller.start_controller()
 
+    # __viz.start_drone_state_plot_thread()
 
     while True:
         pose, t = drone.get_pose_time()

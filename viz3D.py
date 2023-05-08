@@ -34,6 +34,7 @@ from numpy import pi, cos, sin, \
 from matplotlib.pyplot import *
 from scipy.linalg import expm
 from mpl_toolkits.mplot3d import Axes3D
+import threading
 
 
 SIMU_UPDATE_FRQ = 1000
@@ -43,10 +44,40 @@ TRAJECTORY_MARKER_SIZE=0.03
 
 class Viz:
     def __init__(self, l=0.046) :
-        self.fig = plt.figure()
-        self.ax = Axes3D(self.fig)
+        self.state_dot = np.zeros(12)
+        self.t = 0
         self.l = l
         self.pose_history=np.array([[0,0,0,0,0,0]])  
+        self.state_dot_window = 30
+        self.state_dot_update_frq = SIMU_UPDATE_FRQ
+
+        self.fig = plt.figure()
+        self.ax3D = self.fig.add_subplot(1, 2, 1,projection="3d")
+        self.ax2D = [self.fig.add_subplot(2, 2, 2), self.fig.add_subplot(2, 2, 4)] 
+
+        # set axis limits and labels
+        for ax in self.ax2D:
+            ax.set_xlim(0, self.state_dot_window)
+            ax.set_ylim(-60, 70)
+            ax.set_title("Plot of Position")
+            plt.style.use('seaborn-white')
+            # ax.xlabel("Time")
+            # ax.ylabel("Position")
+
+        self.time_buffer = []
+        self.v_buffer = [[],[],[]]
+        self.v_dot_buffer = [[],[],[]] 
+        self.w_buffer = [[],[],[]]
+        self.w_dot_buffer = [[],[],[]] 
+        
+        self.v_lines = [self.ax2D[0].plot([], [], label='Red Line', color='red')[0],
+                            self.ax2D[0].plot([], [], label='Green Line', color='green')[0],
+                            self.ax2D[0].plot([], [], label='Blue Line', color='blue')[0],]
+
+        self.v_dot_lines = [self.ax2D[1].plot([], [], label='Red Line', color='red')[0],
+                                self.ax2D[1].plot([], [], label='Green Line', color='green')[0],
+                                self.ax2D[1].plot([], [], label='Blue Line', color='blue')[0]]
+
 
     def add1(self, M):
         return vstack((M, ones(M.shape[1])))
@@ -75,8 +106,8 @@ class Viz:
 
 
     def draw3H(self, M, col, shadow=False, mirror=1):  # mirror=-1 in case z in directed downward
-        self.ax.plot(mirror * M[0], M[1], mirror * M[2], color=col)
-        if shadow: self.ax.plot(mirror * M[0], M[1], 0 * M[2], color='gray')
+        self.ax3D.plot(mirror * M[0], M[1], mirror * M[2], color=col)
+        if shadow: self.ax3D.plot(mirror * M[0], M[1], 0 * M[2], color='gray')
 
     def circle3H(self, r):
         n = 10
@@ -92,7 +123,7 @@ class Viz:
         y=self.pose_history[:,1]
         z=self.pose_history[:,2]
         dx=dy=dz=np.ones(1)*TRAJECTORY_MARKER_SIZE
-        self.ax.bar3d(x, y, z, dx, dy, dz, color="C1")
+        self.ax3D.bar3d(x, y, z, dx, dy, dz, color="C1")
 
     def draw_quadrotor3D(self, x, l):
         Ca = hstack((self.circle3H(0.3 * l), [[0.3 * l, -0.3 * l], [0, 0], [0, 0], [1, 1]]))  # the disc + the blades
@@ -112,10 +143,49 @@ class Viz:
 
 
     def draw_quadri(self, X, state_dot, t):
-        self.ax.clear()
+        self.ax3D.clear()
         ech = 1 * WORLD_SCALER
-        self.ax.set_xlim3d(-ech, ech)
-        self.ax.set_ylim3d(-ech, ech)
-        self.ax.set_zlim3d(0, ech)
+        self.ax3D.set_xlim3d(-ech, ech)
+        self.ax3D.set_ylim3d(-ech, ech)
+        self.ax3D.set_zlim3d(0, ech)
         self.draw_quadrotor3D(X, BODY_SCALER * self.l)
+        self.drone_state_plot(state_dot, t)
         plt.pause(1/SIMU_UPDATE_FRQ)
+
+
+
+
+
+
+    def drone_state_plot(self, state_dot, t):
+        temp_v = state_dot[0:3]
+        temp_v_dot = state_dot[3:6]
+        temp_w = state_dot[6:9]
+        temp_w_dot = state_dot[9:12]
+
+        self.time_buffer.append(t)
+        for i in range(3):
+            self.v_buffer[i].append(temp_v[i])
+            self.v_dot_buffer[i].append(temp_v_dot[i])
+
+        if len(self.time_buffer) > self.state_dot_window:
+            self.time_buffer.pop(0)
+            for i in range(3):
+                self.v_buffer[i].pop(0)
+                self.v_dot_buffer[i].pop(0)
+            #   For number of 2D plots
+            for i in range(2):
+                self.ax2D[i].set_xlim(self.time_buffer[0], self.time_buffer[-1])
+        
+
+        # update the data for each line
+        for i in range(3):
+                self.v_lines[i].set_data(self.time_buffer, self.v_buffer[i])
+                self.v_dot_lines[i].set_data(self.time_buffer, self.v_dot_buffer[i])
+
+
+
+
+
+
+
