@@ -199,7 +199,7 @@ class DroneController:
                 
                 u1, orientation_des = self.postition_controller(state, des_pose[0:9])
                 orientation_des[2:4] = des_pose[9:11]
-                #   Limmit the roll and pitch to [-80 80]
+                #   Limmit the roll and pitch to [-50 50]
                 orientation_des[0:2] = np.clip(orientation_des[0:2], -0.872, 0.872)
                 #   Apply the thrust
                 if self.trajectory.is_mission_done:
