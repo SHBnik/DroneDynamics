@@ -15,6 +15,8 @@ from mpl_toolkits.mplot3d import Axes3D
 
 
 SIMU_UPDATE_FRQ = 1000
+BODY_SCALER = 4
+WORLD_SCALER = 2
 
 class Viz:
     def __init__(self, l=0.046) :
@@ -35,13 +37,13 @@ class Viz:
     def tran3H(self, x, y, z):
         return array([[1, 0, 0, x], [0, 1, 0, y], [0, 0, 1, z], [0, 0, 0, 1]])
 
-    def eulerH(self, φ, θ, ψ):
+    def eulerH(self, angles):
         Ad_i = self.adjoint(array([1, 0, 0]))
         Ad_j = self.adjoint(array([0, 1, 0]))
         Ad_k = self.adjoint(array([0, 0, 1]))
-        M = expm(ψ * Ad_k) @ expm(θ * Ad_j) @ expm(φ * Ad_i)
+        M = expm(angles[2] * Ad_k) @ expm(angles[1] * Ad_j) @ expm(angles[0] * Ad_i)
         return self.ToH(M)
-
+    
 
     def adjoint(self, w):
         w = w.flatten()
@@ -60,13 +62,13 @@ class Viz:
         z = zeros(n)
         return self.add1(array([x, y, z]))
 
-    def draw_quadrotor3D(self, x, α, l):
+    def draw_quadrotor3D(self, x, l):
         Ca = hstack((self.circle3H(0.3 * l), [[0.3 * l, -0.3 * l], [0, 0], [0, 0], [1, 1]]))  # the disc + the blades
-        T = self.tran3H(*x[0:3]) @ self.eulerH(*x[3:6])
-        C0 = T @ self.tran3H(0, l, 0) @ self.eulerH(0, 0, α[0]) @ Ca  # we rotate the blades
-        C1 = T @ self.tran3H(-l, 0, 0) @ self.eulerH(0, 0, -α[1]) @ Ca
-        C2 = T @ self.tran3H(0, -l, 0) @ self.eulerH(0, 0, α[2]) @ Ca
-        C3 = T @ self.tran3H(l, 0, 0) @ self.eulerH(0, 0, -α[3]) @ Ca
+        T = self.tran3H(*x[0:3]) @ self.eulerH(-x[3:6])
+        C0 = T @ self.tran3H(0, l, 0) @ self.eulerH(np.zeros(3)) @ Ca  # we rotate the blades
+        C1 = T @ self.tran3H(-l, 0, 0) @ self.eulerH(np.zeros(3)) @ Ca
+        C2 = T @ self.tran3H(0, -l, 0) @ self.eulerH(np.zeros(3)) @ Ca
+        C3 = T @ self.tran3H(l, 0, 0) @ self.eulerH(np.zeros(3)) @ Ca
         M = T @ self.add1(array([[l, -l, 0, 0, 0], [0, 0, 0, l, -l], [0, 0, 0, 0, 0]]))
         self.draw3H( M, 'grey', shadow=True)  # body
         self.draw3H( C0, 'green', shadow=True)
@@ -78,9 +80,9 @@ class Viz:
 
     def draw_quadri(self, X, state_dot, t):
         self.ax.clear()
-        ech = 2
+        ech = 1 * WORLD_SCALER
         self.ax.set_xlim3d(-ech, ech)
         self.ax.set_ylim3d(-ech, ech)
-        self.ax.set_zlim3d(0, 1*ech)
-        self.draw_quadrotor3D(X, np.array([[0,0,0,0]]).T, 5 * self.l)
+        self.ax.set_zlim3d(0, ech)
+        self.draw_quadrotor3D(X, BODY_SCALER * self.l)
         plt.pause(1/SIMU_UPDATE_FRQ)

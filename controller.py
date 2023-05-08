@@ -132,8 +132,16 @@ class DroneController:
         self.I = I
 
 
-        self.xPD        = PDPosition(993.8, 189.377)
-        self.yPD        = PDPosition(993.8, 189.377)
+        # self.xPD        = PDPosition(993.8, 189.377)
+        # self.yPD        = PDPosition(993.8, 189.377)
+        # self.zPD        = PDPosition(300,   35.43)
+        # self.phiPD      = PDPosition(10000, 185)
+        # self.thetaPD    = PDPosition(10000, 185)
+        # self.psiPD      = PDPosition(452,   42)
+
+        
+        self.xPD        = PDPosition(300,   70)
+        self.yPD        = PDPosition(300,   70)
         self.zPD        = PDPosition(300,   35.43)
         self.phiPD      = PDPosition(10000, 185)
         self.thetaPD    = PDPosition(10000, 185)
@@ -190,7 +198,7 @@ class DroneController:
                 u1, orientation_des = self.postition_controller(state, des_pose[0:9])
                 orientation_des[2:4] = des_pose[9:11]
                 #   Limmit the roll and pitch to [-80 80]
-                orientation_des[0:2] = np.clip(orientation_des[0:2], -1.395, 1.395)
+                orientation_des[0:2] = np.clip(orientation_des[0:2], -0.872, 0.872)
                 #   Apply the thrust
                 if not self.trajectory.is_mission_done:
                     self.u1(u1)
