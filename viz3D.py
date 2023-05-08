@@ -17,7 +17,7 @@ from mpl_toolkits.mplot3d import Axes3D
 SIMU_UPDATE_FRQ = 1000
 BODY_SCALER = 4
 WORLD_SCALER = 2
-TRAJECTORY_MARKER_SIZE=0.3
+TRAJECTORY_MARKER_SIZE=0.03
 
 class Viz:
     def __init__(self, l=0.046) :
