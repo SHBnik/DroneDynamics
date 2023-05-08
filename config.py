@@ -29,7 +29,7 @@ q0 = np.array([0.0, 0.0, 0.0,    #Position                #m
 
 #   Hovering pose
 #              x, y, z
-qh = np.array([1.5, 0.0, 1.0,    #Position                #m  
+qh = np.array([4.5, 0.0, 1.0,    #Position                #m  
                0.0, 0.0, 0.0])   #Orientation             #rad
 
 #   Take-off altitude
