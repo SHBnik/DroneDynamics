@@ -34,6 +34,7 @@ def Run(q0, qh, th, zt, to, tc):
         __viz.draw_quadri(pose, state_dot, t)
 
         if controller.mission_ended:
+            time.sleep(3)
             break
 
 
