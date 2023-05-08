@@ -49,7 +49,6 @@ if __name__ == "__main__":
     parser.add_argument("--th", type=float)
     parser.add_argument("--zt", type=float)
     args = parser.parse_args()
-    args.noinput="True"
     
     if args.noinput:
         Run(config.q0, config.qh, config.th, config.zt, config.to, config.tc)

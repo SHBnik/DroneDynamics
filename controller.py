@@ -145,7 +145,7 @@ class DroneController:
         self.zPD        = PDPosition(300,   35.43)
         self.phiPD      = PDPosition(10000, 185)
         self.thetaPD    = PDPosition(10000, 185)
-        self.psiPD      = PDPosition(452,   42)
+        self.psiPD      = PDPosition(10000, 185)
 
 
         self.tc = tc
