@@ -35,6 +35,7 @@ class Drone:
         
         self.to = to
         self.ode_timer = Timer(to/ode_scalar)
+        self.ode_scalar = ode_scalar
 
 
 
@@ -99,10 +100,10 @@ class Drone:
         pose = np.zeros(6)
         pose[0:3] = self.state[0:3]
         pose[3:6] = self.state[6:9]
-        return pose, self.ode_timer.current_time()
+        return pose, self.ode_timer.current_time() * self.ode_scalar
     
     def get_state_time(self):
-        return self.state, self.ode_timer.current_time()
+        return self.state, self.ode_timer.current_time() * self.ode_scalar
 
 
     def ode_loop(self):

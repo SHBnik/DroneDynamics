@@ -7,15 +7,25 @@ from dynamics import Drone
 from controller import DroneController
 import time 
 import matplotlib.pyplot as plt
+import viz3D
+from mpl_toolkits.mplot3d import Axes3D
+
+
+SIMU_UPDATE_FRQ=1000
 
 
 
 
 
 
-
-
-
+def draw_quadri(ax, X):
+    ax.clear()
+    ech = 2
+    ax.set_xlim3d(-ech, ech)
+    ax.set_ylim3d(-ech, ech)
+    ax.set_zlim3d(0, 1*ech)
+    arm=0.046
+    viz3D.draw_quadrotor3D(ax, X, np.array([[0,0,0,0]]).T, 5 * arm)
 
 
 
@@ -40,28 +50,18 @@ def Run(q0, qh, th, zt, to, tc):
 
     drone.start_ode()
     controller.start_controller()
-    max = 0 
-    min = 10 
-    # time.sleep(10)
+
+    fig = plt.figure()
+    ax = Axes3D(fig)
+   
     while True:
         pose, t = drone.get_pose_time()
-        t *= config.ode_scalar
-        # data = pose[5]
-        # if (data > max):
-        #     max  = data
-        #     # t1 = t
+        pose[2] = -pose[2]
+        draw_quadri(ax, pose)
+        plt.pause(1/SIMU_UPDATE_FRQ)
+        # __viz.plot(pose, t)
+        # time.sleep(0.01)
 
-        # if (data < min):
-        #     min = data
-        #     # print(t-t1)
-
-        print('x : {0:1.3f} y : {1:1.3f} z : {2:1.3f} phi : {3:1.3f} theta : {4:1.3f} psi : {5:1.3f} time: {6:2.2f}'.format(pose[0], pose[1], pose[2], pose[3], pose[4], pose[5], t))
-
-        # print('data : {0:1.3f} min : {1:1.3f} max : {2:1.3f} time: {3:2.2f}'.format(data, min, max, t))
-        # print('data : {0:1.3f} min : {1:1.3f} max : {2:1.3f}'.format(data, min, max))
-        # if pose[2] == 0:
-        #     break
-        time.sleep(0.01)
     
 
 
