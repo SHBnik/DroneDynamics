@@ -64,13 +64,13 @@ class Viz:
         self.ax2D[0].set_ylim(-10/UNIT_SCALER, 10/UNIT_SCALER)
         # self.ax2D[0].legend()
         self.ax2D.append(self.fig.add_subplot(self.gs[1, 7:], sharex = self.ax2D[0]))
-        self.ax2D[1].set_ylim(-60/UNIT_SCALER, 60/UNIT_SCALER)
+        self.ax2D[1].set_ylim(-70/UNIT_SCALER, 70/UNIT_SCALER)
         # self.ax2D[1].legend()
         self.ax2D.append(self.fig.add_subplot(self.gs[2, 7:], sharex = self.ax2D[0]))
-        self.ax2D[2].set_ylim(-60/UNIT_SCALER, 60/UNIT_SCALER)
+        self.ax2D[2].set_ylim(-30/UNIT_SCALER, 30/UNIT_SCALER)
         # self.ax2D[2].legend()
         self.ax2D.append(self.fig.add_subplot(self.gs[3, 7:], sharex = self.ax2D[0]))
-        self.ax2D[3].set_ylim(-60/UNIT_SCALER, 60/UNIT_SCALER)
+        self.ax2D[3].set_ylim(-70/UNIT_SCALER, 70/UNIT_SCALER)
         # self.ax2D[3].legend()
         # self.ax3D = self.fig.add_subplot(3, 1, 1, projection="3d")
         # self.ax2D = [self.fig.add_subplot(1, 2, 2)]
@@ -134,8 +134,8 @@ class Viz:
         for i in range(3):
             self.v_lines[i].set_data(self.time_buffer, self.v_buffer[i])
             self.v_dot_lines[i].set_data(self.time_buffer, self.v_dot_buffer[i])
-            self.w_lines[i].set_data(self.time_buffer, self.v_buffer[i])
-            self.w_dot_lines[i].set_data(self.time_buffer, self.v_dot_buffer[i])
+            self.w_lines[i].set_data(self.time_buffer, self.w_buffer[i])
+            self.w_dot_lines[i].set_data(self.time_buffer, self.w_dot_buffer[i])
 
     def add1(self, M):
         return vstack((M, ones(M.shape[1])))
