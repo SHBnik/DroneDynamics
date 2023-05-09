@@ -42,7 +42,7 @@ SIMU_UPDATE_FRQ = 1000
 BODY_SCALER = 4
 WORLD_SCALER = 5
 TRAJECTORY_MARKER_SIZE=0.03
-UNIT_SCALER=10
+UNIT_SCALER=1
 
 class Viz:
     def __init__(self, l=0.046) :
@@ -52,37 +52,32 @@ class Viz:
         self.pose_history=np.array([[0,0,0,0,0,0]])  
         self.state_dot_window = 20
         self.state_dot_update_frq = SIMU_UPDATE_FRQ
-        self.gs = gridspec.GridSpec(nrows=4, ncols=2)
-        self.fig = plt.figure()
+        self.gs = gridspec.GridSpec(nrows=4, ncols=10)
+        self.fig = plt.figure(figsize=(10, 5))
 
         # self.ax3D = self.fig.add_subplot(1, 2, 1,projection="3d")
         # self.ax2D = [self.fig.add_subplot(2, 2, 2), self.fig.add_subplot(2, 2, 4)]
 
-        self.ax3D = self.fig.add_subplot(self.gs[:, 0],projection="3d")
-        self.ax2D = [self.fig.add_subplot(self.gs[0:, 1]),
-                     self.fig.add_subplot(self.gs[1:, 1]),
-                     self.fig.add_subplot(self.gs[2:, 1]),
-                     self.fig.add_subplot(self.gs[3:, 1])]
-
-
-        # set axis limits and labels
-        # for ax in self.ax2D:
-        #     ax.legend(loc='upper right')
-        #     ax.set_xlim(0, self.state_dot_window)
-        #     ax.set_ylim(-60, 60)
-        #     ax.set_title("Plot of Position")
-        #     plt.style.use('seaborn-white')
-            # ax.xlabel("Time")
-            # ax.ylabel("Position")
-
+        self.ax3D = self.fig.add_subplot(self.gs[:, :7], projection="3d")
+        self.ax2D = [self.fig.add_subplot(self.gs[0, 7:])]
         self.ax2D[0].set_xlim(0, self.state_dot_window)
-        self.ax2D[0].set_ylim(-60/UNIT_SCALER, 60/UNIT_SCALER)
-        self.ax2D[1].set_xlim(0, self.state_dot_window)
+        self.ax2D[0].set_ylim(-10/UNIT_SCALER, 10/UNIT_SCALER)
+        # self.ax2D[0].legend()
+        self.ax2D.append(self.fig.add_subplot(self.gs[1, 7:], sharex = self.ax2D[0]))
         self.ax2D[1].set_ylim(-60/UNIT_SCALER, 60/UNIT_SCALER)
-        self.ax2D[2].set_xlim(0, self.state_dot_window)
+        # self.ax2D[1].legend()
+        self.ax2D.append(self.fig.add_subplot(self.gs[2, 7:], sharex = self.ax2D[0]))
         self.ax2D[2].set_ylim(-60/UNIT_SCALER, 60/UNIT_SCALER)
-        self.ax2D[3].set_xlim(0, self.state_dot_window)
+        # self.ax2D[2].legend()
+        self.ax2D.append(self.fig.add_subplot(self.gs[3, 7:], sharex = self.ax2D[0]))
         self.ax2D[3].set_ylim(-60/UNIT_SCALER, 60/UNIT_SCALER)
+        # self.ax2D[3].legend()
+        # self.ax3D = self.fig.add_subplot(3, 1, 1, projection="3d")
+        # self.ax2D = [self.fig.add_subplot(1, 2, 2)]
+        # self.ax2D.append(self.fig.add_subplot(2, 2, 3, sharex = self.ax2D[0]))
+        # self.ax2D.append(self.fig.add_subplot(3, 2, 4, sharex = self.ax2D[0]))
+        # self.ax2D.append(self.fig.add_subplot(4, 2, 5, sharex = self.ax2D[0]))
+
 
         # ax.set_title("Plot of Position")
         plt.style.use('seaborn-white')
