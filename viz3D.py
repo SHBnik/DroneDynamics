@@ -40,9 +40,9 @@ import threading
 
 SIMU_UPDATE_FRQ = 1000
 BODY_SCALER = 4
-WORLD_SCALER = 5
-TRAJECTORY_MARKER_SIZE=0.03
-UNIT_SCALER=1
+WORLD_SCALER = 4
+TRAJECTORY_MARKER_SIZE = 0.03
+UNIT_SCALER = 1
 
 class Viz:
     def __init__(self, l=0.046) :
@@ -53,15 +53,14 @@ class Viz:
         self.state_dot_window = 20
         self.state_dot_update_frq = SIMU_UPDATE_FRQ
         self.gs = gridspec.GridSpec(nrows=4, ncols=10)
-        self.fig = plt.figure(figsize=(10, 5))
-
-        # self.ax3D = self.fig.add_subplot(1, 2, 1,projection="3d")
-        # self.ax2D = [self.fig.add_subplot(2, 2, 2), self.fig.add_subplot(2, 2, 4)]
+        self.fig = plt.figure(figsize=(11, 5))
 
         self.ax3D = self.fig.add_subplot(self.gs[:, :7], projection="3d")
+
+
         self.ax2D = [self.fig.add_subplot(self.gs[0, 7:])]
-        self.ax2D[0].set_xlim(0, self.state_dot_window)
         self.ax2D[0].set_ylim(-10/UNIT_SCALER, 10/UNIT_SCALER)
+        self.ax2D[0].set_xlim(0, self.state_dot_window)
         # self.ax2D[0].legend()
         self.ax2D.append(self.fig.add_subplot(self.gs[1, 7:], sharex = self.ax2D[0]))
         self.ax2D[1].set_ylim(-60/UNIT_SCALER, 60/UNIT_SCALER)
@@ -72,14 +71,9 @@ class Viz:
         self.ax2D.append(self.fig.add_subplot(self.gs[3, 7:], sharex = self.ax2D[0]))
         self.ax2D[3].set_ylim(-60/UNIT_SCALER, 60/UNIT_SCALER)
         # self.ax2D[3].legend()
-        # self.ax3D = self.fig.add_subplot(3, 1, 1, projection="3d")
-        # self.ax2D = [self.fig.add_subplot(1, 2, 2)]
-        # self.ax2D.append(self.fig.add_subplot(2, 2, 3, sharex = self.ax2D[0]))
-        # self.ax2D.append(self.fig.add_subplot(3, 2, 4, sharex = self.ax2D[0]))
-        # self.ax2D.append(self.fig.add_subplot(4, 2, 5, sharex = self.ax2D[0]))
 
 
-        # ax.set_title("Plot of Position")
+
         plt.style.use('seaborn-white')
 
         self.time_buffer = []
@@ -196,12 +190,10 @@ class Viz:
 
     def draw_quadri(self, X, state_dot, t):
         self.ax3D.clear()
-        ech = 1 * WORLD_SCALER
-        self.ax3D.set_xlim3d(-ech, ech)
-        self.ax3D.set_ylim3d(-ech, ech)
-        self.ax3D.set_zlim3d(0, ech)
+        self.ax3D.set_xlim3d(-WORLD_SCALER , WORLD_SCALER)
+        self.ax3D.set_ylim3d(-WORLD_SCALER, WORLD_SCALER)
+        self.ax3D.set_zlim3d(0, WORLD_SCALER)
         self.draw_quadrotor3D(X, BODY_SCALER * self.l)
         self.drone_state_plot(state_dot, t)
-        # make the left 3D panel larger
-        # plt.tight_layout()
+        plt.tight_layout()
         plt.pause(1/SIMU_UPDATE_FRQ)
