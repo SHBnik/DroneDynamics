@@ -9,7 +9,7 @@ import time
 
 
 
-def Run(q0, qh, th, zt, to, tc):
+def Run(q0, qh, th, zt, to, tc, show_2Dgraph):
 
     #   Start the ODE solver aka simulation
     drone = Drone(config.drone_mass, config.I, config.drone_length, 
@@ -21,14 +21,10 @@ def Run(q0, qh, th, zt, to, tc):
                                  config.g, config.I, tc, q0, qh, th, zt)
     
     #   Run the visualizer
-    __viz = Viz()
-
+    __viz = Viz(show_2Dgraph=show_2Dgraph)
 
     drone.start_ode()
     controller.start_controller()
-
-    # __viz.start_drone_state_plot_thread()
-
     while True:
         pose, t = drone.get_pose_time()
         state_dot, t = drone.get_state_dot_time()
@@ -37,7 +33,7 @@ def Run(q0, qh, th, zt, to, tc):
         if controller.mission_ended:
             time.sleep(3)
             break
-
+    
 
 def arg_to_np(arg):
     return np.array(arg)
@@ -45,7 +41,7 @@ def arg_to_np(arg):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Drone Dynamics")
-    parser.add_argument("-d", "--debug", help="turn on debug mode", action="store_true")
+    parser.add_argument("--d", action="store_true", default=False)
     parser.add_argument("-n", "--noinput", action="store_true")
     parser.add_argument('--q0', nargs='+', type=float)
     parser.add_argument('--qh', nargs='+', type=float)
@@ -54,6 +50,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     if args.noinput:
-        Run(config.q0, config.qh, config.th, config.zt, config.to, config.tc)
+        Run(config.q0, config.qh, config.th, config.zt, config.to, config.tc, args.d)
     else:
-        Run(arg_to_np(args.q0), arg_to_np(args.qh), args.th, args.zt, config.to, config.tc)
+        Run(arg_to_np(args.q0), arg_to_np(args.qh), args.th, args.zt, config.to, config.tc, args.d)

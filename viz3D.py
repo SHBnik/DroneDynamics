@@ -35,17 +35,21 @@ from matplotlib.pyplot import *
 from scipy.linalg import expm
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.gridspec as gridspec
-import threading
 
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+import mpl_toolkits.mplot3d.axes3d as p3
+from IPython.display import HTML
 
 SIMU_UPDATE_FRQ = 1000
 BODY_SCALER = 4
-WORLD_SCALER = 4
+WORLD_SCALER = 5
 TRAJECTORY_MARKER_SIZE = 0.03
 UNIT_SCALER = 1
 
 class Viz:
-    def __init__(self, l=0.046) :
+    def __init__(self, l=0.046, show_2Dgraph = True) :
         self.state_dot = np.zeros(12)
         self.t = 0
         self.l = l
@@ -53,47 +57,48 @@ class Viz:
         self.state_dot_window = 20
         self.state_dot_update_frq = SIMU_UPDATE_FRQ
         self.gs = gridspec.GridSpec(nrows=4, ncols=10)
+        self.show_2Dgraph = show_2Dgraph
+
         self.fig = plt.figure(figsize=(11, 5))
 
-        self.ax3D = self.fig.add_subplot(self.gs[:, :7], projection="3d")
+
+        if not self.show_2Dgraph:
+            self.ax3D = Axes3D(self.fig)# self.fig.add_subplot( projection="3d")
+        else:
+            self.ax3D = self.fig.add_subplot(self.gs[:, :7], projection="3d")
+            self.ax2D = [self.fig.add_subplot(self.gs[0, 7:])]
+            self.ax2D[0].set_ylim(-10/UNIT_SCALER, 10/UNIT_SCALER)
+            self.ax2D[0].set_xlim(0, self.state_dot_window)
+            self.ax2D.append(self.fig.add_subplot(self.gs[1, 7:], sharex = self.ax2D[0]))
+            self.ax2D[1].set_ylim(-70/UNIT_SCALER, 70/UNIT_SCALER)
+            self.ax2D.append(self.fig.add_subplot(self.gs[2, 7:], sharex = self.ax2D[0]))
+            self.ax2D[2].set_ylim(-30/UNIT_SCALER, 30/UNIT_SCALER)
+            self.ax2D.append(self.fig.add_subplot(self.gs[3, 7:], sharex = self.ax2D[0]))
+            self.ax2D[3].set_ylim(-70/UNIT_SCALER, 70/UNIT_SCALER)
 
 
-        self.ax2D = [self.fig.add_subplot(self.gs[0, 7:])]
-        self.ax2D[0].set_ylim(-10/UNIT_SCALER, 10/UNIT_SCALER)
-        self.ax2D[0].set_xlim(0, self.state_dot_window)
-        # self.ax2D[0].legend()
-        self.ax2D.append(self.fig.add_subplot(self.gs[1, 7:], sharex = self.ax2D[0]))
-        self.ax2D[1].set_ylim(-70/UNIT_SCALER, 70/UNIT_SCALER)
-        # self.ax2D[1].legend()
-        self.ax2D.append(self.fig.add_subplot(self.gs[2, 7:], sharex = self.ax2D[0]))
-        self.ax2D[2].set_ylim(-30/UNIT_SCALER, 30/UNIT_SCALER)
-        # self.ax2D[2].legend()
-        self.ax2D.append(self.fig.add_subplot(self.gs[3, 7:], sharex = self.ax2D[0]))
-        self.ax2D[3].set_ylim(-70/UNIT_SCALER, 70/UNIT_SCALER)
-        # self.ax2D[3].legend()
-
-
+            self.time_buffer = []
+            self.v_buffer = [[],[],[]]
+            self.v_dot_buffer = [[],[],[]] 
+            self.w_buffer = [[],[],[]]
+            self.w_dot_buffer = [[],[],[]] 
+            
+            self.v_lines = [self.ax2D[0].plot([], [], label='Xv', color='red')[0],
+                                self.ax2D[0].plot([], [], label='Yv', color='green')[0],
+                                self.ax2D[0].plot([], [], label='Zv', color='blue')[0],]
+            self.v_dot_lines = [self.ax2D[1].plot([], [], label='Xa', color='red',linestyle='dashed')[0],
+                                    self.ax2D[1].plot([], [], label='Ya', color='green',linestyle='dashed')[0],
+                                    self.ax2D[1].plot([], [], label='Za', color='blue',linestyle='dashed')[0]]
+            self.w_lines = [self.ax2D[2].plot([], [], label='Φ_dot', color='red')[0],
+                            self.ax2D[2].plot([], [], label='θ_dot', color='green')[0],
+                            self.ax2D[2].plot([], [], label='ψ_dot', color='blue')[0], ]
+            self.w_dot_lines = [self.ax2D[3].plot([], [], label='Φ_ddot', color='red',linestyle='dashed')[0],
+                                self.ax2D[3].plot([], [], label='θ_ddot', color='green',linestyle='dashed')[0],
+                                self.ax2D[3].plot([], [], label='ψ_ddot', color='blue',linestyle='dashed')[0]]
+        
 
         plt.style.use('seaborn-white')
 
-        self.time_buffer = []
-        self.v_buffer = [[],[],[]]
-        self.v_dot_buffer = [[],[],[]] 
-        self.w_buffer = [[],[],[]]
-        self.w_dot_buffer = [[],[],[]] 
-        
-        self.v_lines = [self.ax2D[0].plot([], [], label='Xv', color='red')[0],
-                            self.ax2D[0].plot([], [], label='Yv', color='green')[0],
-                            self.ax2D[0].plot([], [], label='Zv', color='blue')[0],]
-        self.v_dot_lines = [self.ax2D[1].plot([], [], label='Xa', color='red',linestyle='dashed')[0],
-                                self.ax2D[1].plot([], [], label='Ya', color='green',linestyle='dashed')[0],
-                                self.ax2D[1].plot([], [], label='Za', color='blue',linestyle='dashed')[0]]
-        self.w_lines = [self.ax2D[2].plot([], [], label='Φ_dot', color='red')[0],
-                        self.ax2D[2].plot([], [], label='θ_dot', color='green')[0],
-                        self.ax2D[2].plot([], [], label='ψ_dot', color='blue')[0], ]
-        self.w_dot_lines = [self.ax2D[3].plot([], [], label='Φ_ddot', color='red',linestyle='dashed')[0],
-                            self.ax2D[3].plot([], [], label='θ_ddot', color='green',linestyle='dashed')[0],
-                            self.ax2D[3].plot([], [], label='ψ_ddot', color='blue',linestyle='dashed')[0]]
 
     def drone_state_plot(self, state_dot, t):
         temp_v = state_dot[0:3]/UNIT_SCALER
@@ -122,7 +127,7 @@ class Viz:
 
         # set legend
         for i in range(4):
-            self.ax2D[i].legend(loc='upper right')
+            self.ax2D[i].legend(loc='upper right', fontsize='5')
 
         # update the data for each line
         for i in range(3):
@@ -194,6 +199,7 @@ class Viz:
         self.ax3D.set_ylim3d(-WORLD_SCALER, WORLD_SCALER)
         self.ax3D.set_zlim3d(0, WORLD_SCALER)
         self.draw_quadrotor3D(X, BODY_SCALER * self.l)
-        self.drone_state_plot(state_dot, t)
+        if self.show_2Dgraph:
+            self.drone_state_plot(state_dot, t)
         plt.tight_layout()
         plt.pause(1/SIMU_UPDATE_FRQ)
