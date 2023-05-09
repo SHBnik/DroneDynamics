@@ -34,7 +34,7 @@ python main.py -n --d
 ```
 If you use the `--d` option, the simulation speed will decrease, and the robot may lag. For better performance, you can run the simulation without the `--d` option.
 
-![](https://github.com/DroneDynamics/src/demo.gif)
+![](https://github.com/SHBnik/DroneDynamics/src/demo.gif)
 
 ## Credits
 This project uses the visualization library from Eric Jaulin's works, available at https://www.ensta-bretagne.fr/jaulin/roblib.py.
