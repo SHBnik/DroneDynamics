@@ -11,7 +11,16 @@ class Timer:
         if time.time() - self.old_time >= self.peroid:
             self.old_time = time.time()
             return True
-        else: return False
+        else:
+            return False
+
+    def is_fire_time(self):
+        t = time.time() - self.old_time
+        if t >= self.peroid:
+            self.old_time = time.time()
+            return True, t
+        else:
+            return False, t
 
     def current_time(self):
         return time.time() - self.first_time
@@ -23,7 +32,8 @@ class Timer:
 class Counter:
     def __init__(self):
         self.old_time = time.time()
-    
-    def stop(self):
-        return time.time() - self.old_time
 
+    def now(self):
+        t = time.time() - self.old_time
+        self.old_time = time.time()
+        return t

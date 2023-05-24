@@ -38,7 +38,3 @@ If you use the `--d` option, the simulation speed will decrease, and the robot m
 
 ## Credits
 This project uses the visualization library from Eric Jaulin's works, available at https://www.ensta-bretagne.fr/jaulin/roblib.py.
-
-    
-
-/demo.mp4
