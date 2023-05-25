@@ -53,5 +53,14 @@ to = 0.001                                          #s
 fo = 1/to                                           #hz
 
 
+#   Simulation
+SIMU_UPDATE_FRQ = 1000
+BODY_SCALER = 4
+WORLD_SCALER = 5
+TRAJECTORY_MARKER_SIZE = 0.03
+UNIT_SCALER = 1
+MULTI_AGENT = 1
+DASHBOARD_MODE = 'global_data'
+
 #   Trajectroy params
-T_traj = 5.5
+T_traj = 7#5.5

@@ -118,7 +118,7 @@ class MinJerkContinuous:
         des_state[[0, 3, 6]] = _des_state[0].T
         des_state[[1, 4, 7]] = _des_state[1].T
         des_state[[2, 5, 8]] = _des_state[2].T
-        return des_state.flatten()
+        return des_state
 
     def start_minjerk_timer(self):
         self.traj_timer = Timer(self.T)

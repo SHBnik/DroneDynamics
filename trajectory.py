@@ -138,7 +138,7 @@ class TrajectoryGenerator2:
         #   Road map generation with A*
         # a_star = Astar(dx, dy, dz, c_obs, c_free)
         # self.waypoints  = a_star.generate_roadmap(start_pose, goal_pose)
-        self.waypoints = np.array([[4, 4, 2], [3, 3, 3]])
+        self.waypoints = np.array([[2, 2, 3], [3, 3, 2], [3, 3, 3]])
 
         self.minjerk = MinJerkContinuous(
             Traj_T, self.zt, self.waypoints, self.start_pose, self.goal_pose
