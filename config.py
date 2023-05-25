@@ -54,4 +54,4 @@ fo = 1/to                                           #hz
 
 
 #   Trajectroy params
-T_traj = 8
+T_traj = 5.5

@@ -1,7 +1,7 @@
 import numpy as np
 import threading
 from timer import Timer, Counter
-from minjerk import MinJerk
+from minjerk import MinJerkContinuous, MinJerkNonContinuous
 from a_star import Astar
 
 
@@ -139,10 +139,13 @@ class TrajectoryGenerator2:
         # a_star = Astar(dx, dy, dz, c_obs, c_free)
         # self.waypoints  = a_star.generate_roadmap(start_pose, goal_pose)
         self.waypoints = np.array([[4, 4, 2], [3, 3, 3]])
-        #   Generate way point out of road map
-        self.minjerk = MinJerk(
+
+        self.minjerk = MinJerkContinuous(
             Traj_T, self.zt, self.waypoints, self.start_pose, self.goal_pose
         )
+        # self.minjerk = MinJerkNonContinuous(
+        #     Traj_T, self.zt, self.waypoints, self.start_pose, self.goal_pose
+        # )
 
     def __take_off(self, cur_pose):
         new_goal_pose = np.copy(self.start_pose)
