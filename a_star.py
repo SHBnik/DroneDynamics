@@ -1,10 +1,21 @@
 from math import pi, sqrt
 from collections import OrderedDict
+from scipy.spatial.distance import euclidean
+from config import DIAGONAL_PATH
 
-
-def neighbors(current):
+def neighbors(current, diagonal=DIAGONAL_PATH):
     # define the list of 4 neighbors: left,right,up,down
-    neighbors = [(0,0,1),(0, 1,0), (1, 0,0), (0, -1,0), (-1, 0,0), (0,0,-1)]
+    # neighbors = [(0,0,1),(0, 1,0), (1, 0,0), (0, -1,0), (-1, 0,0), (0,0,-1)]
+
+    if not diagonal:
+        neighbors = [(0, 0, 1), (0, 1, 0), (1, 0, 0), (0, -1, 0), (-1, 0, 0), (0, 0, -1)]
+    else:
+        # print("in")
+        neighbors = [(0, 0, 1),(0, 1, 1), (1,1,1),(1,0,1),(1,-1,1),(0,-1,1),(-1,-1,1),(-1,0,1),(-1,1,1),
+                     (0, 1, 0), (1, 1, 0), (1, 0, 0), (1, -1, 0), (0, -1, 0), (-1, -1, 0), (-1, 0, 0),
+                     (0, 0, -1), (0, 1, -1), (1, 1, -1), (1, 0, -1), (1, -1, -1), (0, -1, -1), (-1, -1, -1), (-1, 0, -1) ]
+
+
     return [(current[0] + nbr[0], current[1] + nbr[1], current[2] + nbr[2]) for nbr in neighbors]
     # neighbors = [(0, 1), (0, -1), (1, 0), (-1, 0)]
     # return [ (current[0]+nbr[0], current[1]+nbr[1]) for nbr in neighbors ]
@@ -14,9 +25,12 @@ def heuristic_distance(candidate, goal):
     # distance:
     # print("candidate is:", candidate)
     # print("goal is:", goal)
-    result = sum(abs(val1 - val2) for val1, val2 in zip(candidate, goal))
-    # print("result is:",result)
-    return result
+    res = sum(abs(val1 - val2) for val1, val2 in zip(candidate, goal))
+    # print("val1 =",candidate)
+    # print("val2 =", val2)
+    # res = euclidean(candidate, goal)
+    # print("result is:",res)
+    return res
 
 
 def set_to_list(set):
@@ -118,5 +132,10 @@ if __name__ == '__main__':
     print(path)
 #     [(0, 0, 0), (0, 0, 3), (0, 0, 4), (0, 0, 5), (0, 0, 6), (0, 0, 7), (0, 0, 8), (0, 0, 9), (0, 0, 10),
 #      -->  (0, 1, 10), (0, 2, 10), (1, 2, 10), (2, 2, 10), (3, 2, 10), (4, 2, 10), (5, 2, 10)]
+
+
+    # cordsA = (1, 1)
+    # cordsB = (2, 2)
+    # print(euclidean(cordsA, cordsB))
 
 
