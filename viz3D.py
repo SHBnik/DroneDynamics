@@ -44,7 +44,7 @@ from config import *
 
 
 class Viz:
-    def __init__(self, l=0.046, show_2Dgraph=True):
+    def __init__(self, l=drone_length, dashboard_mode = DASHBOARD_MODE, show_2Dgraph=True):
         self.state_dot = np.zeros(12)
         self.t = 0
         self.l = l
@@ -57,21 +57,21 @@ class Viz:
         self.fig = plt.figure(figsize=(11, 5))
 
         self.env_time = 0
-        self.dashboard_mode = DASHBOARD_MODE
+        self.dashboard_mode = dashboard_mode
 
         if not self.show_2Dgraph:
             self.ax3D = Axes3D(self.fig)  # self.fig.add_subplot( projection="3d")
         else:
             self.ax3D = self.fig.add_subplot(self.gs[:, :7], projection="3d")
             self.ax2D = [self.fig.add_subplot(self.gs[0, 7:])]
-            self.ax2D[0].set_ylim(-10 / UNIT_SCALER, 10 / UNIT_SCALER)
+            self.ax2D[0].set_ylim(-10/UNIT_SCALER, 10/UNIT_SCALER)
             self.ax2D[0].set_xlim(0, self.state_dot_window)
             self.ax2D.append(self.fig.add_subplot(self.gs[1, 7:], sharex=self.ax2D[0]))
-            self.ax2D[1].set_ylim(-70 / UNIT_SCALER, 70 / UNIT_SCALER)
+            self.ax2D[1].set_ylim(-70/UNIT_SCALER, 70/UNIT_SCALER)
             self.ax2D.append(self.fig.add_subplot(self.gs[2, 7:], sharex=self.ax2D[0]))
-            self.ax2D[2].set_ylim(-30 / UNIT_SCALER, 30 / UNIT_SCALER)
+            self.ax2D[2].set_ylim(-30/UNIT_SCALER, 30/UNIT_SCALER)
             self.ax2D.append(self.fig.add_subplot(self.gs[3, 7:], sharex=self.ax2D[0]))
-            self.ax2D[3].set_ylim(-70 / UNIT_SCALER, 70 / UNIT_SCALER)
+            self.ax2D[3].set_ylim(-180/UNIT_SCALER, 180/UNIT_SCALER)
 
             self.time_buffer = []
             self.v_buffer = [[], [], []]
@@ -82,43 +82,27 @@ class Viz:
             self.v_lines = [
                 self.ax2D[0].plot([], [], label="Xv", color="red")[0],
                 self.ax2D[0].plot([], [], label="Yv", color="green")[0],
-                self.ax2D[0].plot([], [], label="Zv", color="blue")[0],
-            ]
+                self.ax2D[0].plot([], [], label="Zv", color="blue")[0]]
             self.v_dot_lines = [
-                self.ax2D[1].plot([], [], label="Xa", color="red", linestyle="dashed")[
-                    0
-                ],
-                self.ax2D[1].plot(
-                    [], [], label="Ya", color="green", linestyle="dashed"
-                )[0],
-                self.ax2D[1].plot([], [], label="Za", color="blue", linestyle="dashed")[
-                    0
-                ],
-            ]
+                self.ax2D[1].plot([], [], label="Xa", color="red", linestyle="dashed")[0],
+                self.ax2D[1].plot([], [], label="Ya", color="green", linestyle="dashed")[0],
+                self.ax2D[1].plot([], [], label="Za", color="blue", linestyle="dashed")[0]]
             self.w_lines = [
                 self.ax2D[2].plot([], [], label="Φ_dot", color="red")[0],
                 self.ax2D[2].plot([], [], label="θ_dot", color="green")[0],
-                self.ax2D[2].plot([], [], label="ψ_dot", color="blue")[0],
-            ]
+                self.ax2D[2].plot([], [], label="ψ_dot", color="blue")[0]]
             self.w_dot_lines = [
-                self.ax2D[3].plot(
-                    [], [], label="Φ_ddot", color="red", linestyle="dashed"
-                )[0],
-                self.ax2D[3].plot(
-                    [], [], label="θ_ddot", color="green", linestyle="dashed"
-                )[0],
-                self.ax2D[3].plot(
-                    [], [], label="ψ_ddot", color="blue", linestyle="dashed"
-                )[0],
-            ]
+                self.ax2D[3].plot([], [], label="Φ_ddot", color="red", linestyle="dashed")[0],
+                self.ax2D[3].plot([], [], label="θ_ddot", color="green", linestyle="dashed")[0],
+                self.ax2D[3].plot([], [], label="ψ_ddot", color="blue", linestyle="dashed")[0]]
 
         plt.style.use("seaborn-white")
 
     def drone_state_plot(self, state_dot, t):
-        temp_v = state_dot[0:3] / UNIT_SCALER
-        temp_v_dot = state_dot[3:6] / UNIT_SCALER
-        temp_w = state_dot[6:9] / UNIT_SCALER
-        temp_w_dot = state_dot[9:12] / UNIT_SCALER
+        temp_v = state_dot[0:3]/UNIT_SCALER
+        temp_v_dot = state_dot[3:6]/UNIT_SCALER
+        temp_w = state_dot[6:9]/UNIT_SCALER
+        temp_w_dot = state_dot[9:12]/UNIT_SCALER
 
         self.time_buffer.append(t)
         for i in range(3):
@@ -127,13 +111,13 @@ class Viz:
             self.w_buffer[i].append(temp_w[i])
             self.w_dot_buffer[i].append(temp_w_dot[i])
 
-        if len(self.time_buffer) > self.state_dot_window:
-            self.time_buffer.pop(0)
-            for i in range(3):
-                self.v_buffer[i].pop(0)
-                self.v_dot_buffer[i].pop(0)
-                self.w_buffer[i].pop(0)
-                self.w_dot_buffer[i].pop(0)
+        # if len(self.time_buffer) > self.state_dot_window:
+        #     self.time_buffer.pop(0)
+        #     for i in range(3):
+        #         self.v_buffer[i].pop(0)
+        #         self.v_dot_buffer[i].pop(0)
+        #         self.w_buffer[i].pop(0)
+        #         self.w_dot_buffer[i].pop(0)
         self.env_time += 1
         if self.dashboard_mode == "local_data":
             if len(self.time_buffer) > self.state_dot_window:
@@ -184,9 +168,7 @@ class Viz:
         w = w.flatten()
         return array([[0, -w[2], w[1]], [w[2], 0, -w[0]], [-w[1], w[0], 0]])
 
-    def draw3H(
-        self, M, col, shadow=False, mirror=1
-    ):  # mirror=-1 in case z in directed downward
+    def draw3H(self, M, col, shadow=False, mirror=1):  # mirror=-1 in case z in directed downward
         self.ax3D.plot(mirror * M[0], M[1], mirror * M[2], color=col)
         if shadow:
             self.ax3D.plot(mirror * M[0], M[1], 0 * M[2], color="gray")
@@ -221,8 +203,8 @@ class Viz:
         M = T @ self.add1(array([[l, -l, 0, 0, 0], [0, 0, 0, l, -l], [0, 0, 0, 0, 0]]))
         self.draw3H(M, "grey", shadow=True)  # body
         self.draw3H(C0, "black", shadow=True)
-        self.draw3H(C1, "green", shadow=True)
-        self.draw3H(C2, "green", shadow=True)
+        self.draw3H(C1, "red", shadow=True)
+        self.draw3H(C2, "red", shadow=True)
         self.draw3H(C3, "blue", shadow=True)
         self.draw_trajectory(x)
 
@@ -245,8 +227,8 @@ class Viz:
             )
             self.draw3H(DM, "grey", shadow=True)  # body
             self.draw3H(D0, "black", shadow=True)
-            self.draw3H(D1, "red", shadow=True)
-            self.draw3H(D2, "red", shadow=True)
+            self.draw3H(D1, "green", shadow=True)
+            self.draw3H(D2, "green", shadow=True)
             self.draw3H(D3, "blue", shadow=True)
             self.draw_trajectory(Dx)
 
@@ -259,4 +241,4 @@ class Viz:
         if self.show_2Dgraph:
             self.drone_state_plot(state_dot, t)
         plt.tight_layout()
-        plt.pause(1 / SIMU_UPDATE_FRQ)
+        plt.pause(1/SIMU_UPDATE_FRQ)
