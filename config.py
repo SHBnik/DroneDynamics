@@ -71,3 +71,7 @@ DASHBOARD_MODE = 'global_data'
 
 #   Trajectroy params
 T_traj = 2#5.5
+
+
+#   A* neighbors params
+DIAGONAL_PATH=True
