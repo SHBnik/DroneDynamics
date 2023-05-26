@@ -202,11 +202,12 @@ class Viz:
             navx = nav[:, 0]
             navy = nav[:, 1]
             navz = nav[:, 2]
-            # a = self.pose_history[:, 0]/2
-            # b = self.pose_history[:, 1]/2
-            # c = self.pose_history[:, 2]/2
-            # self.ax3D.plot(navx, navy, navz, 'ro', markersize=2 )
-            self.ax3D.plot(navx, navy, navz, 'r-.', markersize=2)
+
+            # refer tp https://matplotlib.org/2.0.2/api/_as_gen/matplotlib.axes.Axes.plot.html#matplotlib.axes.Axes.plot
+            # display waypoints only
+            self.ax3D.plot(navx, navy, navz, 'ro', markersize=5 )
+            # display waypoints and navigation trajectory
+            self.ax3D.plot(navx, navy, navz, 'y--', markersize=2)
             pass
 
 
