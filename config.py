@@ -56,16 +56,22 @@ fo = 1/to                                           #hz
 #   Simulation
 SIMU_UPDATE_FRQ = 1000
 BODY_SCALER = 2
+WORLD_SCALER = 11
 TRAJECTORY_MARKER_SIZE = 0.03
 UNIT_SCALER = 1
 AGENT_NUMBER = 1
 DASHBOARD_MODE = 'global_data'
+# DASHBOARD_MODE = 'local_data'
 
 
 map_resolution = [0.2, 0.2, 0.2]
 
 #   Trajectroy params
-T_traj = 6
+T_traj = 2#5.5
 
 #   robot size for calculating c free
 robot_size = np.array([0.125, 0.08, 0.04])
+
+#   A* neighbors params
+DIAGONAL_PATH=True
+PRUNE_PATH=True

@@ -107,6 +107,7 @@ class TrajectoryGenerator2:
         zt,
         c_obs,
         c_all,
+        waypoints,
         Traj_T,
         resolution,
         T_hover=0,
@@ -135,9 +136,12 @@ class TrajectoryGenerator2:
         self.is_mission_done = False
 
         #   Road map generation with A*
-        a_star = AStar(c_all, c_obs, resolution)
-        self.waypoints = a_star.a_star_search(self.start_pose[0:3], self.goal_pose[0:3])
-        self.__print_time("A*")
+        # a_star = AStar(c_all, c_obs, resolution)
+        # self.waypoints = a_star.a_star_search(self.start_pose[0:3], self.goal_pose[0:3])
+        # self.__print_time("A*")
+
+        self.waypoints = np.array([[0, 0, 0], [2, 2, 3], [3, 3, 2], [3, 3, 3]])
+        self.waypoints = np.array(waypoints)
 
         # self.minjerk = MinJerkContinuous(Traj_T, self.waypoints)
         self.minjerk = MinJerkNonContinuous(Traj_T, self.waypoints)

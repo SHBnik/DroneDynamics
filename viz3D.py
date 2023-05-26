@@ -44,7 +44,14 @@ from config import *
 
 
 class Viz:
-    def __init__(self, mapdata, traj_path, l=0.046, show_2Dgraph=True):
+    def __init__(
+        self,
+        mapdata,
+        traj_path,
+        l=drone_length,
+        dashboard_mode=DASHBOARD_MODE,
+        show_2Dgraph=True,
+    ):
         self.state_dot = np.zeros(12)
         self.t = 0
         self.l = l
@@ -60,7 +67,7 @@ class Viz:
         self.fig = plt.figure(figsize=(11, 5))
 
         self.env_time = 0
-        self.dashboard_mode = DASHBOARD_MODE
+        self.dashboard_mode = dashboard_mode
 
         if not self.show_2Dgraph:
             self.ax3D = Axes3D(self.fig)  # self.fig.add_subplot( projection="3d")
@@ -74,7 +81,7 @@ class Viz:
             self.ax2D.append(self.fig.add_subplot(self.gs[2, 7:], sharex=self.ax2D[0]))
             self.ax2D[2].set_ylim(-30 / UNIT_SCALER, 30 / UNIT_SCALER)
             self.ax2D.append(self.fig.add_subplot(self.gs[3, 7:], sharex=self.ax2D[0]))
-            self.ax2D[3].set_ylim(-70 / UNIT_SCALER, 70 / UNIT_SCALER)
+            self.ax2D[3].set_ylim(-180 / UNIT_SCALER, 180 / UNIT_SCALER)
 
             self.time_buffer = []
             self.v_buffer = [[], [], []]
@@ -131,13 +138,13 @@ class Viz:
             self.w_buffer[i].append(temp_w[i])
             self.w_dot_buffer[i].append(temp_w_dot[i])
 
-        if len(self.time_buffer) > self.state_dot_window:
-            self.time_buffer.pop(0)
-            for i in range(3):
-                self.v_buffer[i].pop(0)
-                self.v_dot_buffer[i].pop(0)
-                self.w_buffer[i].pop(0)
-                self.w_dot_buffer[i].pop(0)
+        # if len(self.time_buffer) > self.state_dot_window:
+        #     self.time_buffer.pop(0)
+        #     for i in range(3):
+        #         self.v_buffer[i].pop(0)
+        #         self.v_dot_buffer[i].pop(0)
+        #         self.w_buffer[i].pop(0)
+        #         self.w_dot_buffer[i].pop(0)
         self.env_time += 1
         if self.dashboard_mode == "local_data":
             if len(self.time_buffer) > self.state_dot_window:
@@ -203,14 +210,14 @@ class Viz:
         z = zeros(n)
         return self.add1(array([x, y, z]))
 
-    def draw_trajectory(self, pose):
+    def draw_trajectory_Barplot(self, pose):
         self.pose_history = np.vstack((self.pose_history, np.array(pose)))
         x = self.pose_history[:, 0]
         y = self.pose_history[:, 1]
         z = self.pose_history[:, 2]
         dx = dy = dz = np.ones(1) * TRAJECTORY_MARKER_SIZE
-        # self.ax3D.bar3d(x, y, z, dx, dy, dz, color="C1")
-        self.ax3D.plot(x, y, z, color="coral", linewidth=0.9)
+        self.ax3D.bar3d(x, y, z, dx, dy, dz, color="C1")
+        # self.ax3D.plot(x, y, z, color="coral", linewidth=0.9)
 
     def draw_obs(self):
         for origin, size in zip(self.obs_origin, self.obs_size):
@@ -230,7 +237,28 @@ class Viz:
         self.ax3D.plot(*zip(*self.traj_path), c="green")
         self.ax3D.scatter(*zip(*self.traj_path), c="black", s=10)
 
-    def draw_quadrotor3D(self, x, l):
+    def draw_robot_trajectory(self, pose):
+        self.pose_history = np.vstack((self.pose_history, np.array(pose)))
+        x = self.pose_history[:, 0]
+        y = self.pose_history[:, 1]
+        z = self.pose_history[:, 2]
+
+        self.ax3D.plot(x, y, z, color="coral", linewidth=0.9)
+
+        # if navigation is not None:
+        #     nav = np.array(navigation)
+        #     navx = nav[:, 0]
+        #     navy = nav[:, 1]
+        #     navz = nav[:, 2]
+
+        #     # refer tp https://matplotlib.org/2.0.2/api/_as_gen/matplotlib.axes.Axes.plot.html#matplotlib.axes.Axes.plot
+        #     # display waypoints only
+        #     self.ax3D.plot(navx, navy, navz, "ro", markersize=5)
+        #     # display waypoints and navigation trajectory
+        #     self.ax3D.plot(navx, navy, navz, "y--", markersize=2)
+        #     pass
+
+    def draw_quadrotor3D(self, x, l, navigation):
         Ca = hstack(
             (self.circle3H(0.3 * l), [[0.3 * l, -0.3 * l], [0, 0], [0, 0], [1, 1]])
         )  # the disc + the blades
@@ -244,10 +272,10 @@ class Viz:
         M = T @ self.add1(array([[l, -l, 0, 0, 0], [0, 0, 0, l, -l], [0, 0, 0, 0, 0]]))
         self.draw3H(M, "grey", shadow=True)  # body
         self.draw3H(C0, "black", shadow=True)
-        self.draw3H(C1, "green", shadow=True)
-        self.draw3H(C2, "green", shadow=True)
+        self.draw3H(C1, "red", shadow=True)
+        self.draw3H(C2, "red", shadow=True)
         self.draw3H(C3, "blue", shadow=True)
-        self.draw_trajectory(x)
+        self.draw_robot_trajectory(x)
 
         if AGENT_NUMBER > 1:
             Dx = x.copy()
@@ -268,10 +296,10 @@ class Viz:
             )
             self.draw3H(DM, "grey", shadow=True)  # body
             self.draw3H(D0, "black", shadow=True)
-            self.draw3H(D1, "red", shadow=True)
-            self.draw3H(D2, "red", shadow=True)
+            self.draw3H(D1, "green", shadow=True)
+            self.draw3H(D2, "green", shadow=True)
             self.draw3H(D3, "blue", shadow=True)
-            self.draw_trajectory(Dx)
+            self.draw_robot_trajectory(Dx)
 
     def draw_quadri(self, X, state_dot, t):
         self.ax3D.clear()

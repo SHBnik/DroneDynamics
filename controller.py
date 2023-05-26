@@ -44,6 +44,7 @@ class DroneController:
         zt,
         c_all,
         c_obs,
+        waypoints,
         T_traj,
         resolution,
     ):
@@ -76,8 +77,9 @@ class DroneController:
         #   phase   1
         # self.trajectory = TrajectoryGenerator1(q0, qh, zt, th)
         #   phase   2
+
         self.trajectory = TrajectoryGenerator2(
-            q0, qh, zt, c_obs, c_all, T_traj, resolution, T_hover=th
+            q0, qh, zt, c_obs, c_all, waypoints, T_traj, resolution, T_hover=th
         )
         self.mission_ended = False
         self.planned_traj_path = self.trajectory.waypoints
