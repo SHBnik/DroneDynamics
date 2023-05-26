@@ -25,10 +25,10 @@ def heuristic_distance(candidate, goal):
     # distance:
     # print("candidate is:", candidate)
     # print("goal is:", goal)
-    res = sum(abs(val1 - val2) for val1, val2 in zip(candidate, goal))
+    # res = sum(abs(val1 - val2) for val1, val2 in zip(candidate, goal))
     # print("val1 =",candidate)
     # print("val2 =", val2)
-    # res = euclidean(candidate, goal)
+    res = euclidean(candidate, goal)
     # print("result is:",res)
     return res
 
@@ -36,7 +36,44 @@ def heuristic_distance(candidate, goal):
 def set_to_list(set):
     return [list(e) for e in set]
 
-def get_path_from_A_star(start, goal, take_off_height , obstacles, boundaries,  prune=False, check_bound=False):
+def compute_slope_3d(pta,ptb):
+    # print("pta,ptb is",pta,ptb)
+    slope_x = (ptb[0] - pta[0])
+    slope_y = (ptb[1] - pta[1])
+    slope_z = (ptb[2] - pta[2])
+
+    # Check for division by zero to avoid ZeroDivisionError
+    if slope_x == 0 and slope_y == 0 and slope_z == 0:
+        return "The line is not well-defined."
+
+    if slope_x==0:
+        slope = 0
+    else:
+        slope = slope_y / slope_x  # Calculate the slope in the xy-plane
+
+    return slope,  slope_z
+
+
+def merge_waypoints(path):
+    # prune_path = [path[0]]
+    # print("==",path)
+    path.append((float('inf'),float('-inf'),float('inf')))
+    # print("==", path)
+    # prune_path = [path[0]]
+    prune_path=[]
+    last_slope, _, _, last_slope_z= 0,0,0,0
+
+    for wid in range(1,len(path)):
+        slope, slope_z = compute_slope_3d(path[wid-1],path[wid])
+        if last_slope==slope and last_slope_z ==slope_z:
+            continue
+        else:
+            prune_path.append(path[wid-1])
+        last_slope =slope
+        last_slope_z = slope_z
+    return prune_path
+
+def get_path_from_A_star(start, goal, take_off_height , obstacles, boundaries,  prune, check_bound=False):
 # def get_path_from_A_star(start, goal, take_off_height, obstacles):
     # input  start: integer 3-tuple of the current grid, e.g., (0, 0,0)
     #        goal: integer 2-tuple  of the goal grid, e.g., (5, 1,0)
@@ -97,20 +134,10 @@ def get_path_from_A_star(start, goal, take_off_height , obstacles, boundaries,  
     # path.insert(0,(-1,-1,-1))
     path.insert(0,start)
     # path.remove(start)
+    if prune:
+        path = merge_waypoints(path)
     return set_to_list(path)
 
-
-
-# class Astar:
-#     def __init__(self, start, goal, take_off_height, C_obs, boundaries, check_bound=False ):
-#         self.start = start
-#         self.goal = goal
-#         self.take_off_height = take_off_height
-#         self.C_obs = C_obs
-#         self.boundaries=boundaries
-#
-#     def generate_roadmap(self, start_pose, goal_pose):
-#         pass
 
 if __name__ == '__main__':
     # start = (0, 0)  # this is a tuple data structure in Python initialized with 2 integers
@@ -128,6 +155,8 @@ if __name__ == '__main__':
 
     boundaries= (20,20,20)
     # take_off_height=1
+
+    # goal = (4, 4, 9)
     path = get_path_from_A_star(start, goal, take_off_height , obstacles, boundaries, prune=False, check_bound=False)
     print(path)
 #     [(0, 0, 0), (0, 0, 3), (0, 0, 4), (0, 0, 5), (0, 0, 6), (0, 0, 7), (0, 0, 8), (0, 0, 9), (0, 0, 10),
@@ -138,4 +167,10 @@ if __name__ == '__main__':
     # cordsB = (2, 2)
     # print(euclidean(cordsA, cordsB))
 
-
+    # 26 neighbors result
+    # [[0, 0, 0], [0, 0, 3], [0, 0, 4], [0, 0, 5], [1, 1, 6], [2, 2, 7], [3, 3, 8], [4, 3, 9], [5, 2, 10]]
+    # goal = (4, 4, 9)
+    path = get_path_from_A_star(start, goal, take_off_height, obstacles, boundaries, prune=True, check_bound=False)
+    print("after prune")
+    print(path)
+    # [[0, 0, 0], [0, 0, 3], [0, 0, 5], [3, 3, 8], [4, 3, 9], [5, 2, 10]]
