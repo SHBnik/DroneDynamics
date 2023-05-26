@@ -19,7 +19,7 @@ def Run(q0, qh, th, zt, to, tc, show_2Dgraph):
         config.g,
         q0,
         to,
-        config.ode_scalar,
+        config.ode_scalar
     )
 
     #   Map reader
@@ -38,7 +38,7 @@ def Run(q0, qh, th, zt, to, tc, show_2Dgraph):
         zt,
         0,
         0,
-        config.T_traj,
+        config.T_traj
     )
 
     #   Run the visualizer
