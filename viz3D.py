@@ -189,7 +189,7 @@ class Viz:
         dx = dy = dz = np.ones(1) * TRAJECTORY_MARKER_SIZE
         self.ax3D.bar3d(x, y, z, dx, dy, dz, color="C1")
 
-    def draw_trajectory(self, pose):
+    def draw_trajectory(self, pose, navigation):
         self.pose_history = np.vstack((self.pose_history, np.array(pose)))
         x = self.pose_history[:, 0]
         y = self.pose_history[:, 1]
@@ -197,13 +197,22 @@ class Viz:
 
         self.ax3D.plot(x, y, z)
 
-        # a = self.pose_history[:, 0]/2
-        # b = self.pose_history[:, 1]/2
-        # c = self.pose_history[:, 2]/2
-        # self.ax3D.plot(a, b, c)
+        if navigation is not None:
+            nav=np.array(navigation)
+            navx = nav[:, 0]
+            navy = nav[:, 1]
+            navz = nav[:, 2]
+            # a = self.pose_history[:, 0]/2
+            # b = self.pose_history[:, 1]/2
+            # c = self.pose_history[:, 2]/2
+            # self.ax3D.plot(navx, navy, navz, 'ro', markersize=2 )
+            self.ax3D.plot(navx, navy, navz, 'r-.', markersize=2)
+            pass
 
 
-    def draw_quadrotor3D(self, x, l):
+
+
+    def draw_quadrotor3D(self, x, l, navigation):
         Ca = hstack(
             (self.circle3H(0.3 * l), [[0.3 * l, -0.3 * l], [0, 0], [0, 0], [1, 1]])
         )  # the disc + the blades
@@ -220,7 +229,7 @@ class Viz:
         self.draw3H(C1, "red", shadow=True)
         self.draw3H(C2, "red", shadow=True)
         self.draw3H(C3, "blue", shadow=True)
-        self.draw_trajectory(x)
+        self.draw_trajectory(x, navigation)
 
         if MULTI_AGENT > 1:
             Dx = x.copy()
@@ -246,12 +255,12 @@ class Viz:
             self.draw3H(D3, "blue", shadow=True)
             self.draw_trajectory(Dx)
 
-    def draw_quadri(self, X, state_dot, t):
+    def draw_quadri(self, X, state_dot, t, navigation):
         self.ax3D.clear()
         self.ax3D.set_xlim3d(-WORLD_SCALER, WORLD_SCALER)
         self.ax3D.set_ylim3d(-WORLD_SCALER, WORLD_SCALER)
         self.ax3D.set_zlim3d(0, WORLD_SCALER)
-        self.draw_quadrotor3D(X, BODY_SCALER * self.l)
+        self.draw_quadrotor3D(X, BODY_SCALER * self.l , navigation)
         if self.show_2Dgraph:
             self.drone_state_plot(state_dot, t)
         plt.tight_layout()
