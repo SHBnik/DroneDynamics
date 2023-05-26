@@ -2,7 +2,7 @@ import numpy as np
 import threading
 from timer import Timer, Counter
 from minjerk import MinJerkContinuous, MinJerkNonContinuous
-from a_star import AStar
+from a_star2 import AStar
 
 
 #   phase 1
