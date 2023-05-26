@@ -35,8 +35,8 @@ def Run(q0, qh, th, zt, to, tc, show_2Dgraph):
     # waypoints = get_path_from_A_star((0, 0,0), (5, 2,10),zt, obstacles, boundaries)
 
 
-    waypoints = get_path_from_A_star(start, goal, zt, obstacles, boundaries)
-    # print("navigation path is :",waypoints)
+    waypoints = get_path_from_A_star(start, goal, zt, obstacles, boundaries, config.PRUNE_PATH)
+    print("navigation path is :",waypoints)
 
 
     #   Start the drone controller
