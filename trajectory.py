@@ -2,7 +2,7 @@ import numpy as np
 import threading
 from timer import Timer, Counter
 from minjerk import MinJerkContinuous, MinJerkNonContinuous
-from a_star import Astar
+from a_star import AStar
 
 
 #   phase 1
@@ -106,14 +106,13 @@ class TrajectoryGenerator2:
         goal_pose,
         zt,
         c_obs,
-        c_free,
+        c_all,
         Traj_T,
+        resolution,
         T_hover=0,
-        dx=1,
-        dy=1,
-        dz=1,
     ):
         self.start_pose = start_pose
+        self.start_pose[2] = zt
         self.goal_pose = goal_pose
         self.zt = zt
         self.T = T_hover
@@ -136,16 +135,12 @@ class TrajectoryGenerator2:
         self.is_mission_done = False
 
         #   Road map generation with A*
-        # a_star = Astar(dx, dy, dz, c_obs, c_free)
-        # self.waypoints  = a_star.generate_roadmap(start_pose, goal_pose)
-        self.waypoints = np.array([[2, 2, 3], [3, 3, 2], [3, 3, 3]])
+        a_star = AStar(c_all, c_obs, resolution)
+        self.waypoints = a_star.a_star_search(self.start_pose[0:3], self.goal_pose[0:3])
+        self.__print_time("A*")
 
-        self.minjerk = MinJerkContinuous(
-            Traj_T, self.zt, self.waypoints, self.start_pose, self.goal_pose
-        )
-        # self.minjerk = MinJerkNonContinuous(
-        #     Traj_T, self.zt, self.waypoints, self.start_pose, self.goal_pose
-        # )
+        # self.minjerk = MinJerkContinuous(Traj_T, self.waypoints)
+        self.minjerk = MinJerkNonContinuous(Traj_T, self.waypoints)
 
     def __take_off(self, cur_pose):
         new_goal_pose = np.copy(self.start_pose)

@@ -5,10 +5,16 @@ from timer import Counter
 from dynamics import Drone
 from controller import DroneController
 from viz3D import Viz
+from map import MapReader
 import time
 
 
 def Run(q0, qh, th, zt, to, tc, show_2Dgraph):
+    #   Map reader
+    map_data = MapReader.read_map("Environment.txt")  # , config.robot_size)
+
+    c_obs, c_all = MapReader.generate_c(map_data, config.map_resolution)
+
     #   Start the ODE solver aka simulation
     drone = Drone(
         config.drone_mass,
@@ -22,8 +28,6 @@ def Run(q0, qh, th, zt, to, tc, show_2Dgraph):
         config.ode_scalar,
     )
 
-    #   Map reader
-
     #   Start the drone controller
     controller = DroneController(
         drone.get_state_time,
@@ -36,13 +40,14 @@ def Run(q0, qh, th, zt, to, tc, show_2Dgraph):
         qh,
         th,
         zt,
-        0,
-        0,
+        c_all,
+        c_obs,
         config.T_traj,
+        config.map_resolution,
     )
 
     #   Run the visualizer
-    __viz = Viz(show_2Dgraph=show_2Dgraph)
+    __viz = Viz(map_data, controller.planned_traj_path, show_2Dgraph=show_2Dgraph)
 
     drone.start_ode()
     controller.start_controller()

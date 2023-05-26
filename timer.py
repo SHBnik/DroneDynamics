@@ -17,7 +17,7 @@ class Timer:
     def is_fire_time(self):
         t = time.time() - self.old_time
         if t >= self.peroid:
-            self.old_time = time.time()
+            # self.old_time = time.time()
             return True, t
         else:
             return False, t

@@ -44,7 +44,7 @@ from config import *
 
 
 class Viz:
-    def __init__(self, l=0.046, show_2Dgraph=True):
+    def __init__(self, mapdata, traj_path, l=0.046, show_2Dgraph=True):
         self.state_dot = np.zeros(12)
         self.t = 0
         self.l = l
@@ -53,7 +53,10 @@ class Viz:
         self.state_dot_update_frq = SIMU_UPDATE_FRQ
         self.gs = gridspec.GridSpec(nrows=4, ncols=10)
         self.show_2Dgraph = show_2Dgraph
-
+        self.world_size = mapdata["boundaries"]
+        self.obs_origin = mapdata["obstacle_origin"]
+        self.obs_size = mapdata["obstacle_size"]
+        self.traj_path = traj_path
         self.fig = plt.figure(figsize=(11, 5))
 
         self.env_time = 0
@@ -113,6 +116,7 @@ class Viz:
             ]
 
         plt.style.use("seaborn-white")
+        self.all_plots = []
 
     def drone_state_plot(self, state_dot, t):
         temp_v = state_dot[0:3] / UNIT_SCALER
@@ -205,7 +209,26 @@ class Viz:
         y = self.pose_history[:, 1]
         z = self.pose_history[:, 2]
         dx = dy = dz = np.ones(1) * TRAJECTORY_MARKER_SIZE
-        self.ax3D.bar3d(x, y, z, dx, dy, dz, color="C1")
+        # self.ax3D.bar3d(x, y, z, dx, dy, dz, color="C1")
+        self.ax3D.plot(x, y, z, color="coral", linewidth=0.9)
+
+    def draw_obs(self):
+        for origin, size in zip(self.obs_origin, self.obs_size):
+            self.ax3D.bar3d(
+                origin[0],
+                origin[1],
+                origin[2],
+                size[0],
+                size[1],
+                size[2],
+                alpha=0.2,
+                color="grey",
+                edgecolor="red",
+            )
+
+    def draw_planned_trajectory(self):
+        self.ax3D.plot(*zip(*self.traj_path), c="green")
+        self.ax3D.scatter(*zip(*self.traj_path), c="black", s=10)
 
     def draw_quadrotor3D(self, x, l):
         Ca = hstack(
@@ -226,7 +249,7 @@ class Viz:
         self.draw3H(C3, "blue", shadow=True)
         self.draw_trajectory(x)
 
-        if MULTI_AGENT > 1:
+        if AGENT_NUMBER > 1:
             Dx = x.copy()
             Dx[0:2] = Dx[0:2] - 2
             Dx[3] += 1
@@ -252,11 +275,20 @@ class Viz:
 
     def draw_quadri(self, X, state_dot, t):
         self.ax3D.clear()
-        self.ax3D.set_xlim3d(-WORLD_SCALER, WORLD_SCALER)
-        self.ax3D.set_ylim3d(-WORLD_SCALER, WORLD_SCALER)
-        self.ax3D.set_zlim3d(0, WORLD_SCALER)
+        self.ax3D.set_xlim3d(0, self.world_size[0])
+        self.ax3D.set_ylim3d(0, self.world_size[1])
+        self.ax3D.set_zlim3d(0, self.world_size[2])
+        self.draw_obs()
+        self.draw_planned_trajectory()
         self.draw_quadrotor3D(X, BODY_SCALER * self.l)
         if self.show_2Dgraph:
             self.drone_state_plot(state_dot, t)
         plt.tight_layout()
         plt.pause(1 / SIMU_UPDATE_FRQ)
+
+    # def plot(self,)
+    def make_animation(self):
+        ani = animation.ArtistAnimation(self.fig, self.allplots, interval=50, blit=True)
+        fn = "Quadcopter_Trajectory"
+        ani.save("%s.mp4" % (fn), writer="ffmpeg", fps=1000 / 50)
+        ani.save("%s.gif" % (fn), writer="imagemagick", fps=1000 / 50)
