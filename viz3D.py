@@ -181,13 +181,27 @@ class Viz:
         z = zeros(n)
         return self.add1(array([x, y, z]))
 
-    def draw_trajectory(self, pose):
+    def draw_trajectory_Barplot(self, pose):
         self.pose_history = np.vstack((self.pose_history, np.array(pose)))
         x = self.pose_history[:, 0]
         y = self.pose_history[:, 1]
         z = self.pose_history[:, 2]
         dx = dy = dz = np.ones(1) * TRAJECTORY_MARKER_SIZE
         self.ax3D.bar3d(x, y, z, dx, dy, dz, color="C1")
+
+    def draw_trajectory(self, pose):
+        self.pose_history = np.vstack((self.pose_history, np.array(pose)))
+        x = self.pose_history[:, 0]
+        y = self.pose_history[:, 1]
+        z = self.pose_history[:, 2]
+
+        self.ax3D.plot(x, y, z)
+
+        # a = self.pose_history[:, 0]/2
+        # b = self.pose_history[:, 1]/2
+        # c = self.pose_history[:, 2]/2
+        # self.ax3D.plot(a, b, c)
+
 
     def draw_quadrotor3D(self, x, l):
         Ca = hstack(
