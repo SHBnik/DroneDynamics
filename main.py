@@ -80,5 +80,5 @@ if __name__ == "__main__":
             args.zt,
             config.to,
             config.tc,
-            args.d,
+            args.d
         )
