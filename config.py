@@ -75,3 +75,4 @@ T_traj = 2#5.5
 
 #   A* neighbors params
 DIAGONAL_PATH=True
+PRUNE_PATH=True
