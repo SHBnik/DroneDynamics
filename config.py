@@ -24,12 +24,18 @@ g = 9.8
 
 #   Initial pose
 #              x, y, z
-q0 = np.array([1.0, 1.0, 0.0,    #Position                #m  
+# q0 = np.array([1.0, 1.0, 0.0,    #Position                #m
+#                0.0, 0.0, 0.0])   #Orientation             #rad
+
+q0 = np.array([0.0, 0.0, 0.0,    #Position                #m
                0.0, 0.0, 0.0])   #Orientation             #rad
 
 #   Hovering pose
 #              x, y, z
-qh = np.array([3.0, 3.0, 3.0,    #Position                #m  
+# qh = np.array([3.0, 3.0, 3.0,    #Position                #m
+#                0.0, 0.0, 0.0])   #Orientation             #rad
+
+qh = np.array([5.0, 2.0, 10.0,    #Position                #m
                0.0, 0.0, 0.0])   #Orientation             #rad
 
 #   Take-off altitude
@@ -56,11 +62,12 @@ fo = 1/to                                           #hz
 #   Simulation
 SIMU_UPDATE_FRQ = 1000
 BODY_SCALER = 4
-WORLD_SCALER = 5
+WORLD_SCALER = 11
 TRAJECTORY_MARKER_SIZE = 0.03
 UNIT_SCALER = 1
 MULTI_AGENT = 1
 DASHBOARD_MODE = 'global_data'
+# DASHBOARD_MODE = 'local_data'
 
 #   Trajectroy params
-T_traj = 7#5.5
+T_traj = 2#5.5
