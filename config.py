@@ -29,7 +29,7 @@ q0 = np.array([0.0, 5.0, 0.0,    #Position                #m
 
 #   Hovering pose
 #              x, y, z
-qh = np.array([10.0, 5.0, 0.0,    #Position                #m  
+qh = np.array([10.0, 5.0, 1.0,    #Position                #m  
                0.0, 0.0, 0.0])   #Orientation             #rad
 
 #   Take-off altitude
@@ -55,7 +55,7 @@ fo = 1/to                                           #hz
 
 #   Simulation
 SIMU_UPDATE_FRQ = 1000
-BODY_SCALER = 2
+BODY_SCALER = 6
 WORLD_SCALER = 11
 TRAJECTORY_MARKER_SIZE = 0.03
 UNIT_SCALER = 1
@@ -68,7 +68,7 @@ map_resolution = [0.2, 0.2, 0.2]
 # map_resolution = [1, 1, 0.2]
 
 #   Trajectroy params
-T_traj = 5.5
+traj_T_Kp = 5.2
 
 #   robot size for calculating c free
 robot_size = np.array([0.125, 0.08, 0.04])

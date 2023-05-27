@@ -75,22 +75,25 @@ def Run(q0, qh, th, zt, to, tc, show_2Dgraph):
         th,
         zt,
         waypoints,
-        config.T_traj,
+        config.traj_T_Kp,
     )
 
     #   Run the visualizer
-    __viz = Viz(map_data, waypoints, show_2Dgraph=show_2Dgraph)
+    __viz = Viz(map_data, show_2Dgraph=show_2Dgraph)
 
     drone.start_ode()
     controller.start_controller()
+
     while True:
-        pose, t = drone.get_pose_time()
+        pose = drone.get_pose_time()[0]
         state_dot, t = drone.get_state_dot_time()
-        __viz.draw_quadri(pose, state_dot, t)
+        __viz.draw_quadri(pose, state_dot, waypoints, t)
 
         if controller.mission_ended:
             time.sleep(5)
             break
+
+    __viz.plot_state_and_des_state(controller.state_des_state)
 
 
 def arg_to_np(arg):

@@ -47,7 +47,6 @@ class Viz:
     def __init__(
         self,
         mapdata,
-        traj_path,
         l=drone_length,
         dashboard_mode=DASHBOARD_MODE,
         show_2Dgraph=True,
@@ -63,7 +62,6 @@ class Viz:
         self.world_size = mapdata["boundaries"]
         self.obs_origin = mapdata["obstacle_origin"]
         self.obs_size = mapdata["obstacle_size"]
-        self.traj_path = traj_path
         self.fig = plt.figure(figsize=(11, 5))
 
         self.env_time = 0
@@ -160,7 +158,7 @@ class Viz:
                     self.ax2D[i].set_xlim(self.time_buffer[0], self.time_buffer[-1])
         else:
             for i in range(4):
-                self.ax2D[i].set_xlim(0, self.env_time)
+                self.ax2D[i].set_xlim(0, self.time_buffer[-1])
 
         # set legend
         for i in range(4):
@@ -239,10 +237,10 @@ class Viz:
                 edgecolor="red",
             )
 
-    def draw_planned_trajectory(self):
+    def draw_planned_trajectory(self, traj_path):
         # display waypoints and navigation trajectory
-        self.ax3D.plot(*zip(*self.traj_path), "y--", c="green", linewidth=1)
-        self.ax3D.scatter(*zip(*self.traj_path), c="black", s=10)
+        self.ax3D.plot(*zip(*traj_path), "y--", c="green", linewidth=1)
+        self.ax3D.scatter(*zip(*traj_path), c="black", s=10)
 
     def draw_robot_trajectory(self, pose):
         if self.pose_history is None:
@@ -301,18 +299,85 @@ class Viz:
             self.draw3H(D3, "blue", shadow=True)
             self.draw_robot_trajectory(Dx)
 
-    def draw_quadri(self, X, state_dot, t):
+    def draw_quadri(self, X, state_dot, waypoints, t):
         self.ax3D.clear()
         self.ax3D.set_xlim3d(0, self.world_size[0])
         self.ax3D.set_ylim3d(0, self.world_size[1])
         self.ax3D.set_zlim3d(0, self.world_size[2])
         self.draw_obs()
-        self.draw_planned_trajectory()
+        self.draw_planned_trajectory(waypoints)
         self.draw_quadrotor3D(X, BODY_SCALER * self.l)
         if self.show_2Dgraph:
             self.drone_state_plot(state_dot, t)
         plt.tight_layout()
         plt.pause(1 / SIMU_UPDATE_FRQ)
+
+    def plot_state_and_des_state(self, data):
+        # Separate state, des_state, orientation_des and time
+        state = np.vstack([item[0] for item in data])
+        des_state = np.vstack([item[1] for item in data])
+        orientation_des = np.vstack([item[2] for item in data])
+        time = np.hstack([item[3] for item in data])
+
+        # Determine the minimum length among the sequences
+        min_length = min(len(state), len(des_state), len(orientation_des), len(time))
+
+        # Trim the sequences to the minimum length
+        state = state[:min_length]
+        des_state = des_state[:min_length]
+        orientation_des = orientation_des[:min_length]
+        time = time[:min_length]
+
+        # Initialize subplots
+        fig, axs = plt.subplots(4, 3, figsize=(15, 20))
+
+        labels = [
+            "x",
+            "y",
+            "z",
+            "x-dot",
+            "y-dot",
+            "z-dot",
+            "phi",
+            "theta",
+            "psi",
+            "phi-dot",
+            "theta-dot",
+            "psi-dot",
+        ]
+
+        # Plot state and des_state
+        for i in range(3):
+            axs[0, i].plot(time, state[:, i], label="State")
+            axs[0, i].plot(time, des_state[:, i], label="Desired State")
+            axs[0, i].set_xlabel("t")
+            axs[0, i].set_ylabel(labels[i])
+            axs[0, i].legend()
+
+        for i in range(3):
+            axs[1, i].plot(time, state[:, i + 3], label="State")
+            # axs[1, i].plot(time, des_state[:, i+3], label='Desired State')
+            axs[1, i].set_xlabel("t")
+            axs[1, i].set_ylabel(labels[i + 3])
+            axs[1, i].legend()
+
+        # Plot state and orientation_des
+        for i in range(3):
+            axs[2, i].plot(time, state[:, i + 6], label="State")
+            axs[2, i].plot(time, orientation_des[:, i], label="Desired Orientation")
+            axs[2, i].set_xlabel("t")
+            axs[2, i].set_ylabel(labels[i + 6])
+            axs[2, i].legend()
+
+        for i in range(3):
+            axs[3, i].plot(time, state[:, i + 9], label="State")
+            # axs[3, i].plot(time, orientation_des[:, i+3], label='Desired Orientation')
+            axs[3, i].set_xlabel("t")
+            axs[3, i].set_ylabel(labels[i + 9])
+            axs[3, i].legend()
+
+        plt.tight_layout()
+        plt.show()
 
     def make_animation(self):
         ani = animation.ArtistAnimation(self.fig, self.allplots, interval=50, blit=True)

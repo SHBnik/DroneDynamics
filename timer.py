@@ -17,10 +17,16 @@ class Timer:
     def is_fire_time(self):
         t = time.time() - self.old_time
         if t >= self.peroid:
-            self.old_time = time.time()
+            # self.old_time = time.time()
             return True, t
         else:
             return False, t
+
+    def set_period(self, period):
+        self.peroid = period
+
+    def reset(self):
+        self.old_time = time.time()
 
     def current_time(self):
         return time.time() - self.first_time

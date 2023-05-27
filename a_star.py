@@ -75,7 +75,7 @@ def set_to_list(set):
 
 def compute_slope_3d(pta, ptb):
     # print("pta,ptb is",pta,ptb)
-    slope_x = ptb[0] - pta[0]
+    slope_x = ptb[0] - pta[0] + 1e6
     slope_y = ptb[1] - pta[1]
     slope_z = ptb[2] - pta[2]
 

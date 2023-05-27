@@ -107,7 +107,7 @@ class TrajectoryGenerator2:
         goal_pose,
         zt,
         waypoints,
-        Traj_T,
+        traj_T_Kp,
         T_hover=0,
     ):
         self.start_pose = start_pose
@@ -132,8 +132,8 @@ class TrajectoryGenerator2:
 
         self.is_mission_done = False
 
-        # self.minjerk = MinJerkContinuous(Traj_T, waypoints)
-        self.minjerk = MinJerkNonContinuous(Traj_T, waypoints)
+        # self.minjerk = MinJerkContinuous(waypoints, traj_T_Kp=traj_T_Kp)
+        self.minjerk = MinJerkNonContinuous(waypoints, traj_T_Kp=traj_T_Kp)
 
     def __take_off(self, cur_pose):
         new_goal_pose = np.copy(self.start_pose)

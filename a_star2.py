@@ -94,3 +94,11 @@ class AStar:
                 new_path.append(path[i])
         new_path.append(path[-1])
         return np.array(new_path)
+
+    #   Another version of A*
+    a_star2 = AStar(
+        c_all,
+        c_obs,
+        # config.map_resolution
+    )
+    waypoints = a_star2.a_star_search(np.hstack([q0[0:2], zt]), qh[0:3])
