@@ -43,7 +43,7 @@ def Run(q0, qh, th, zt, to, tc, show_2Dgraph):
             [tuple(point) for point in c_obs],
             map_data["boundaries"],
             prune=True,
-            check_bound=True,
+            check_bound=True
         )
     )
 
