@@ -52,12 +52,12 @@ class MinJerkNonContinuous:
         self.prev_boundary_cond = np.copy(self.boundary_cond)
         # print(self.boundary_cond)
 
-    def trajectroy(self):
+    def trajectroy(self, robot_cur_pose):
         if_cond, t = self.traj_timer.is_fire_time()
         if if_cond:
+            self.print_poses(robot_cur_pose)
             self.waypoint_counter += 1
             if self.waypoint_counter == len(self.waypoints):
-                #   TODO: finish mission got to idle
                 self.is_done = True
             else:
                 self.next_waypoint()
@@ -74,6 +74,23 @@ class MinJerkNonContinuous:
     def euclidean_t_est(self, point1, point2):
         point1, point2 = np.array(point1), np.array(point2)
         return np.linalg.norm(point1 - point2)
+
+    def print_poses(self, robot_cur_pose):
+        waypoint_pose = np.hstack(
+            [self.waypoints[self.waypoint_counter], np.array([0, 0, 0])]
+        )
+        print("---> Waypoint: {0}".format(self.waypoint_counter))
+        print(
+            "---> Robot    Pose: {0}".format(
+                np.array_str(robot_cur_pose, precision=2, suppress_small=True)
+            )
+        )
+        print(
+            "---> Waypoint Pose: {0}".format(
+                np.array_str(waypoint_pose, precision=2, suppress_small=True)
+            )
+        )
+        print()
 
 
 class MinJerkContinuous:
@@ -100,13 +117,14 @@ class MinJerkContinuous:
             ]
         )
 
-    def trajectroy(self):
+    def trajectroy(self, robot_cur_pose):
         if_cond, t = self.traj_timer.is_fire_time()
         t = self.traj_timer.current_time()
         if if_cond:
             if self.waypoint_counter == len(self.waypoints) - 1:
                 self.is_done = True
             else:
+                self.print_poses(robot_cur_pose)
                 self.waypoint_counter += 1
         _des_state = []
         for i in range(3):
@@ -127,19 +145,18 @@ class MinJerkContinuous:
         self.traj_timer = Timer(self.T)
 
     # fmt: off
-
+    # fmt: on
 
     def calculate_3d_coefs(self, waypoints, T):
         # coef = np.zeros((3, 6,len(waypoints)))
-        coefx = np.zeros((6,len(waypoints)))
-        coefy = np.zeros((6,len(waypoints)))
-        coefz = np.zeros((6,len(waypoints)))
+        coefx = np.zeros((6, len(waypoints)))
+        coefy = np.zeros((6, len(waypoints)))
+        coefz = np.zeros((6, len(waypoints)))
         coefx = self.calculate_1d_coefs(waypoints[:, 0], T)
         coefy = self.calculate_1d_coefs(waypoints[:, 1], T)
         coefz = self.calculate_1d_coefs(waypoints[:, 2], T)
 
-        return coefx,coefy,coefz
-
+        return coefx, coefy, coefz
 
     def calculate_1d_coefs(self, waypoints, traj_T):
         n = len(waypoints)
@@ -154,7 +171,7 @@ class MinJerkContinuous:
             # if i == 0 or i == n - 1:
             #     continue
             # velocities[i] = -100  #   dummy number
-            # accelerations[i] = 
+            # accelerations[i] =
 
         # Define the variable for the coefficients of the polynomials
         coeffs = cp.Variable((6, n))
@@ -176,9 +193,8 @@ class MinJerkContinuous:
                 + coeffs[0, i] * T**5
                 == waypoints[i],
             ]
-            if i == 0 or i == n-1:
-
-            # if velocities[i] != -100:
+            if i == 0 or i == n - 1:
+                # if velocities[i] != -100:
                 constraints += [
                     coeffs[4, i]
                     + 2 * coeffs[3, i] * T
@@ -188,7 +204,7 @@ class MinJerkContinuous:
                     == velocities[i],
                 ]
 
-            # if accelerations[i] != -100:
+                # if accelerations[i] != -100:
                 constraints += [
                     2 * coeffs[3, i]
                     + 6 * coeffs[2, i] * T
@@ -226,3 +242,20 @@ class MinJerkContinuous:
 
         # Get the coefficients
         return coeffs.value
+
+    def print_poses(self, robot_cur_pose):
+        waypoint_pose = np.hstack(
+            [self.waypoints[self.waypoint_counter], np.array([0, 0, 0])]
+        )
+        print("---> Waypoint: {0}".format(self.waypoint_counter))
+        print(
+            "---> Robot    Pose: {0}".format(
+                np.array_str(robot_cur_pose, precision=2, suppress_small=True)
+            )
+        )
+        print(
+            "---> Waypoint Pose: {0}".format(
+                np.array_str(waypoint_pose, precision=2, suppress_small=True)
+            )
+        )
+        print()

@@ -24,12 +24,12 @@ g = 9.8
 
 #   Initial pose
 #              x, y, z
-q0 = np.array([0.2, 0.2, 0.0,    #Position                #m  
+q0 = np.array([0.0, 5.0, 0.0,    #Position                #m  
                0.0, 0.0, 0.0])   #Orientation             #rad
 
 #   Hovering pose
 #              x, y, z
-qh = np.array([4.6, 2.0, 1.0,    #Position                #m  
+qh = np.array([10.0, 5.0, 0.0,    #Position                #m  
                0.0, 0.0, 0.0])   #Orientation             #rad
 
 #   Take-off altitude
@@ -65,9 +65,10 @@ DASHBOARD_MODE = 'global_data'
 
 
 map_resolution = [0.2, 0.2, 0.2]
+# map_resolution = [1, 1, 0.2]
 
 #   Trajectroy params
-T_traj = 2#5.5
+T_traj = 5.5
 
 #   robot size for calculating c free
 robot_size = np.array([0.125, 0.08, 0.04])

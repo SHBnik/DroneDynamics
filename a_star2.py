@@ -3,7 +3,7 @@ from collections import defaultdict
 
 
 class AStar:
-    def __init__(self, c_all, c_obs, resolution):
+    def __init__(self, c_all, c_obs, resolution=np.array([1, 1, 1])):
         self.c_free = {tuple(map(int, point / resolution)) for point in c_all} - {
             tuple(map(int, point / resolution)) for point in c_obs
         }

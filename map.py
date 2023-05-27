@@ -45,7 +45,7 @@ class MapReader:
         }
 
     @staticmethod
-    def generate_c(_map, resolution):
+    def generate_c(_map, resolution=np.array([1, 1, 1])):
         x = np.linspace(
             0,
             _map["boundaries"][0],

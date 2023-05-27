@@ -7,14 +7,47 @@ from controller import DroneController
 from viz3D import Viz
 from map import MapReader
 import time
-from a_star import get_path_from_A_star
+from a_star2 import AStar
+import a_star
+import warnings
+
+warnings.filterwarnings("ignore")
+
+
+def __print_time(timer, stage):
+    print("Time elapsed for stage {0}: {1:.2f} ms".format(stage, timer.now() * 1000))
 
 
 def Run(q0, qh, th, zt, to, tc, show_2Dgraph):
-    #   Map reader
-    map_data = MapReader.read_map("Environment.txt")  # , config.robot_size)
+    component_timer = Counter()
 
-    c_obs, c_all = MapReader.generate_c(map_data, config.map_resolution)
+    #   Map reader
+    map_data = MapReader.read_map(
+        "Environment.txt",
+        # config.robot_size
+    )
+
+    c_obs, c_all = MapReader.generate_c(
+        map_data,
+        # config.map_resolution
+    )
+
+    __print_time(component_timer, "Map generation")
+
+    #   Way point generation with A*
+    waypoints = np.array(
+        a_star.get_path_from_A_star(
+            tuple(q0[0:3]),
+            tuple(qh[0:3]),
+            zt,
+            [tuple(point) for point in c_obs],
+            map_data["boundaries"],
+            prune=True,
+            check_bound=True,
+        )
+    )
+
+    __print_time(component_timer, "A*")
 
     #   Start the ODE solver aka simulation
     drone = Drone(
@@ -29,22 +62,6 @@ def Run(q0, qh, th, zt, to, tc, show_2Dgraph):
         config.ode_scalar,
     )
 
-    ###################################################
-    # #   Map reader #TODO:
-    # obstacles=None
-    # boundaries=None
-
-    # # for test purpose
-    # obstacles = [(-2, 1, 0), (-2, 0, 0), (-2, -1, 0), (-2, -2, 0), (-4, -2, 0), (-4, -3, 0)]
-    # boundaries = (20, 20, 20)
-    # start =  tuple(q0[:3])
-    # goal = tuple(qh[:3])
-    # # waypoints = get_path_from_A_star((0, 0,0), (5, 2,10),zt, obstacles, boundaries)
-
-    # waypoints = get_path_from_A_star(start, goal, zt, obstacles, , config.PRUNE_PATH)
-    # print("navigation path is :",waypoints)
-    ######################################################
-
     #   Start the drone controller
     controller = DroneController(
         drone.get_state_time,
@@ -57,15 +74,12 @@ def Run(q0, qh, th, zt, to, tc, show_2Dgraph):
         qh,
         th,
         zt,
-        c_all,
-        c_obs,
         waypoints,
         config.T_traj,
-        config.map_resolution,
     )
 
     #   Run the visualizer
-    __viz = Viz(map_data, controller.planned_traj_path, show_2Dgraph=show_2Dgraph)
+    __viz = Viz(map_data, waypoints, show_2Dgraph=show_2Dgraph)
 
     drone.start_ode()
     controller.start_controller()
@@ -92,8 +106,8 @@ if __name__ == "__main__":
     parser.add_argument("--th", type=float)
     parser.add_argument("--zt", type=float)
     args = parser.parse_args()
-    args.d = True
-    args.noinput = True
+    # args.d = True
+    # args.noinput = True
 
     if args.noinput:
         # print("in")

@@ -3,6 +3,7 @@ import threading
 from timer import Timer, Counter
 from minjerk import MinJerkContinuous, MinJerkNonContinuous
 from a_star2 import AStar
+import a_star
 
 
 #   phase 1
@@ -105,15 +106,11 @@ class TrajectoryGenerator2:
         start_pose,
         goal_pose,
         zt,
-        c_obs,
-        c_all,
         waypoints,
         Traj_T,
-        resolution,
         T_hover=0,
     ):
         self.start_pose = start_pose
-        self.start_pose[2] = zt
         self.goal_pose = goal_pose
         self.zt = zt
         self.T = T_hover
@@ -135,16 +132,8 @@ class TrajectoryGenerator2:
 
         self.is_mission_done = False
 
-        #   Road map generation with A*
-        # a_star = AStar(c_all, c_obs, resolution)
-        # self.waypoints = a_star.a_star_search(self.start_pose[0:3], self.goal_pose[0:3])
-        # self.__print_time("A*")
-
-        self.waypoints = np.array([[0, 0, 0], [2, 2, 3], [3, 3, 2], [3, 3, 3]])
-        self.waypoints = np.array(waypoints)
-
-        # self.minjerk = MinJerkContinuous(Traj_T, self.waypoints)
-        self.minjerk = MinJerkNonContinuous(Traj_T, self.waypoints)
+        # self.minjerk = MinJerkContinuous(Traj_T, waypoints)
+        self.minjerk = MinJerkNonContinuous(Traj_T, waypoints)
 
     def __take_off(self, cur_pose):
         new_goal_pose = np.copy(self.start_pose)
@@ -177,7 +166,7 @@ class TrajectoryGenerator2:
             self.coast_flag = False
             self.minjerk.start_minjerk_timer()
 
-        new_des_state = self.minjerk.trajectroy()
+        new_des_state = self.minjerk.trajectroy(cur_pose)
 
         if self.minjerk.is_done:
             self.__print_time("trajectory execution")

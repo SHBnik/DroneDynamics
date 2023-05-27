@@ -55,7 +55,7 @@ class Viz:
         self.state_dot = np.zeros(12)
         self.t = 0
         self.l = l
-        self.pose_history = np.array([[0, 0, 0, 0, 0, 0]])
+        self.pose_history = None
         self.state_dot_window = 20
         self.state_dot_update_frq = SIMU_UPDATE_FRQ
         self.gs = gridspec.GridSpec(nrows=4, ncols=10)
@@ -211,10 +211,16 @@ class Viz:
         return self.add1(array([x, y, z]))
 
     def draw_trajectory_Barplot(self, pose):
-        self.pose_history = np.vstack((self.pose_history, np.array(pose)))
-        x = self.pose_history[:, 0]
-        y = self.pose_history[:, 1]
-        z = self.pose_history[:, 2]
+        if self.pose_history is None:
+            self.pose_history = np.array(pose)
+            x = self.pose_history[0]
+            y = self.pose_history[1]
+            z = self.pose_history[2]
+        else:
+            self.pose_history = np.vstack((self.pose_history, np.array(pose)))
+            x = self.pose_history[:, 0]
+            y = self.pose_history[:, 1]
+            z = self.pose_history[:, 2]
         dx = dy = dz = np.ones(1) * TRAJECTORY_MARKER_SIZE
         self.ax3D.bar3d(x, y, z, dx, dy, dz, color="C1")
         # self.ax3D.plot(x, y, z, color="coral", linewidth=0.9)
@@ -228,37 +234,31 @@ class Viz:
                 size[0],
                 size[1],
                 size[2],
-                alpha=0.2,
+                alpha=0.15,
                 color="grey",
                 edgecolor="red",
             )
 
     def draw_planned_trajectory(self):
-        self.ax3D.plot(*zip(*self.traj_path), c="green")
+        # display waypoints and navigation trajectory
+        self.ax3D.plot(*zip(*self.traj_path), "y--", c="green", linewidth=1)
         self.ax3D.scatter(*zip(*self.traj_path), c="black", s=10)
 
     def draw_robot_trajectory(self, pose):
-        self.pose_history = np.vstack((self.pose_history, np.array(pose)))
-        x = self.pose_history[:, 0]
-        y = self.pose_history[:, 1]
-        z = self.pose_history[:, 2]
+        if self.pose_history is None:
+            self.pose_history = np.array(pose)
+            x = self.pose_history[0]
+            y = self.pose_history[1]
+            z = self.pose_history[2]
+        else:
+            self.pose_history = np.vstack((self.pose_history, np.array(pose)))
+            x = self.pose_history[:, 0]
+            y = self.pose_history[:, 1]
+            z = self.pose_history[:, 2]
 
-        self.ax3D.plot(x, y, z, color="coral", linewidth=0.9)
+        self.ax3D.plot(x, y, z, color="coral", linewidth=1.2)
 
-        # if navigation is not None:
-        #     nav = np.array(navigation)
-        #     navx = nav[:, 0]
-        #     navy = nav[:, 1]
-        #     navz = nav[:, 2]
-
-        #     # refer tp https://matplotlib.org/2.0.2/api/_as_gen/matplotlib.axes.Axes.plot.html#matplotlib.axes.Axes.plot
-        #     # display waypoints only
-        #     self.ax3D.plot(navx, navy, navz, "ro", markersize=5)
-        #     # display waypoints and navigation trajectory
-        #     self.ax3D.plot(navx, navy, navz, "y--", markersize=2)
-        #     pass
-
-    def draw_quadrotor3D(self, x, l, navigation):
+    def draw_quadrotor3D(self, x, l):
         Ca = hstack(
             (self.circle3H(0.3 * l), [[0.3 * l, -0.3 * l], [0, 0], [0, 0], [1, 1]])
         )  # the disc + the blades
@@ -314,7 +314,6 @@ class Viz:
         plt.tight_layout()
         plt.pause(1 / SIMU_UPDATE_FRQ)
 
-    # def plot(self,)
     def make_animation(self):
         ani = animation.ArtistAnimation(self.fig, self.allplots, interval=50, blit=True)
         fn = "Quadcopter_Trajectory"

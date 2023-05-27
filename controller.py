@@ -42,11 +42,8 @@ class DroneController:
         qh,
         th,
         zt,
-        c_all,
-        c_obs,
         waypoints,
         T_traj,
-        resolution,
     ):
         self.sensor_feedback = drone_state_time_func
         self.u1, self.u2 = drone_u_func
@@ -79,10 +76,9 @@ class DroneController:
         #   phase   2
 
         self.trajectory = TrajectoryGenerator2(
-            q0, qh, zt, c_obs, c_all, waypoints, T_traj, resolution, T_hover=th
+            q0, qh, zt, waypoints, T_traj, T_hover=th
         )
         self.mission_ended = False
-        self.planned_traj_path = self.trajectory.waypoints
 
     def atitude_controller(self, feedback, des):
         """
