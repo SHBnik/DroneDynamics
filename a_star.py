@@ -7,10 +7,11 @@ import numpy as np
 from config import *
 
 
-def neighbors(current, diagonal=DIAGONAL_PATH):
+def neighbors(current, boundaries, check_bound=False,diagonal=DIAGONAL_PATH):
     # define the list of 4 neighbors: left,right,up,down
     # neighbors = [(0,0,1),(0, 1,0), (1, 0,0), (0, -1,0), (-1, 0,0), (0,0,-1)]
 
+    X_lim, Y_lim, Z_lim = boundaries
     if not diagonal:
         neighbors = [
             (0, 0, 1),
@@ -49,12 +50,18 @@ def neighbors(current, diagonal=DIAGONAL_PATH):
             (-1, 0, -1),
         ]
 
-    return [
-        (current[0] + nbr[0], current[1] + nbr[1], current[2] + nbr[2])
-        for nbr in neighbors
-    ]
-    # neighbors = [(0, 1), (0, -1), (1, 0), (-1, 0)]
-    # return [ (current[0]+nbr[0], current[1]+nbr[1]) for nbr in neighbors ]
+    if not check_bound:
+        # print("in  2")
+        return [(current[0] + nbr[0], current[1] + nbr[1], current[2] + nbr[2]) for nbr in neighbors]
+
+    res = []
+    for nbr in neighbors:
+        flag_x = abs(current[0] + nbr[0] - X_lim/2) <= X_lim/2
+        flag_y = abs(current[1] + nbr[1] - Y_lim/2) <= Y_lim/2
+        flag_z = abs(current[2] + nbr[2] - Z_lim/2) <= Z_lim/2
+        if flag_x and flag_y and flag_z:
+            res.append((current[0] + nbr[0], current[1] + nbr[1], current[2] + nbr[2]))
+    return res
 
 
 def heuristic_distance(candidate, goal):
@@ -68,6 +75,8 @@ def heuristic_distance(candidate, goal):
     # print("result is:",res)
     return res
 
+def transition_cost(pta, ptb):
+    return euclidean(pta, ptb)
 
 def set_to_list(set):
     return [list(e) for e in set]
@@ -111,9 +120,7 @@ def merge_waypoints(path):
     return prune_path
 
 
-def get_path_from_A_star(
-    start, goal, take_off_height, obstacles, boundaries, prune, check_bound=False
-):
+def get_path_from_A_star(start, goal, take_off_height, obstacles, boundaries, prune, check_bound=False):
     # def get_path_from_A_star(start, goal, take_off_height, obstacles):
     # input  start: integer 3-tuple of the current grid, e.g., (0, 0,0)
     #        goal: integer 2-tuple  of the goal grid, e.g., (5, 1,0)
@@ -137,6 +144,7 @@ def get_path_from_A_star(
     # Closed List
     closed_list = []
 
+    # print("check_bound is ",check_bound)
     while open_list:
         current = open_list.pop(0)[1]
         closed_list.append(current)
@@ -145,7 +153,7 @@ def get_path_from_A_star(
             # Sort Open List(outside For loop)
             open_list.sort()
             break
-        for candidate in neighbors(current):
+        for candidate in neighbors(current, boundaries, check_bound):
             if candidate in obstacles:
                 continue
             if candidate in closed_list:
@@ -153,7 +161,17 @@ def get_path_from_A_star(
             # print(" [current]=", current)
             # print(" [past_cost]=", past_cost)
             # print(" past_cost[current]=", past_cost[current])
-            tentative_past_cost = past_cost[current] + 1
+
+            # don't do it here, waste of time
+            # if candidate[0] >=X_lim or candidate[1] >=Y_lim or candidate[2] >=Z_lim:
+            #     continue
+
+            # for non-diagonal move
+            # tentative_past_cost = past_cost[current] + 1
+
+            # for diagonal move
+            tentative_past_cost = past_cost[current] + transition_cost(current,candidate)
+
             # if candidate not in past_cost or tentative_past_cost < past_cost[current]:
             if candidate not in past_cost or tentative_past_cost < past_cost[candidate]:
                 # if tentative_past_cost < past_cost[candidate]:
@@ -168,7 +186,6 @@ def get_path_from_A_star(
     path = [goal]
     while path[-1] != take_off_start:
         # print(parent[path[-1]])
-
         path.append(parent[path[-1]])
     path.reverse()
     # path.insert(0,(-1,-1,-1))
